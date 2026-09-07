@@ -1,0 +1,20 @@
+name = "zego-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zego-db"
+database_id = "9b905d94-509e-4597-a4ca-dda69cf7f49f"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "zego-uploads"
+
+[vars]
+# Non-secret defaults for local dev. Override real values with:
+#   wrangler secret put JWT_SECRET
+#   wrangler secret put GOOGLE_CLIENT_IDS
+ENVIRONMENT = "development"

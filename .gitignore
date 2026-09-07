@@ -73,3 +73,8 @@ enatega-multivendor-app/.env
 goodbite-multivendor-app
 **/*service-account*.json
 **/serviceAccountKey*.json
+
+# Cloudflare Workers backend (zego-api)
+zego-api/node_modules/
+zego-api/.wrangler/
+zego-api/.dev.vars
