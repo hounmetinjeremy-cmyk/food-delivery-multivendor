@@ -16,5 +16,7 @@ bucket_name = "zego-uploads"
 [vars]
 # Non-secret defaults for local dev. Override real values with:
 #   wrangler secret put JWT_SECRET
-#   wrangler secret put GOOGLE_CLIENT_IDS
 ENVIRONMENT = "development"
+# Google OAuth client IDs allowed to sign in (comma-separated: web, iOS, Android
+# client IDs all share one Google Sign-In flow). Not secret — safe as a var.
+GOOGLE_CLIENT_IDS = "545417768480-4l1rmpk3iq7jcsga2bi8jk0o6d1uqq6p.apps.googleusercontent.com"
