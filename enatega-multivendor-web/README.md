@@ -1,4 +1,4 @@
-# Enatega Customer Web
+# ZeGo Customer Web
 
 ## Requirements
 

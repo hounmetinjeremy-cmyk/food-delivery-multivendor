@@ -1,4 +1,4 @@
-# Enatega Rider App
+# ZeGo Rider App
 
 ## Requirements
 

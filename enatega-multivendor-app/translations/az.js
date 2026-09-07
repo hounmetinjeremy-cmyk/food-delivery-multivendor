@@ -18,7 +18,7 @@ export const az = {
     getStarted: 'Başla!',
     welcome:
       'Yalla-ya xoş gəlmisiniz, bəzən sizə yalnız sevgi lazımdır. Amma arada bir az yemək də zərər verməz.',
-    welcomeScreen: 'Enatega-ya Xoş Gəlmisiniz',
+    welcomeScreen: 'ZeGo-ya Xoş Gəlmisiniz',
     loginBtn: 'Daxil ol',
     registerBtn: 'Qeydiyyatdan keç',
     name: 'Ad',
@@ -283,7 +283,7 @@ export const az = {
     useCurrentLocation: 'Cari Məkanı İstifadə Et',
     locationPermissionMessage:
       'Bu mesajı vurun ki, Parametrlər açılsın, sonra tətbiqin məkan icazəsindən istifadə etməsinə icazə verin.',
-    enategaUseYourLocationMessage:
+    zegoUseYourLocationMessage:
       'Yaxınlıqdakı restoranları tapmaq üçün sadəcə məkanınıza ehtiyacımız var',
     selectAnotherLocation: 'Məkanı Əl ilə Təyin Et',
     setLocation: 'Məkanı Təyin Et',
@@ -574,8 +574,8 @@ export const az = {
     none: 'heç biri',
     yourEmail: 'E-poçtunuzu daxil edərək asanlıqla daxil olun!',
     yourEmailPassword: 'Giriş üçün indi şifrələrinizi daxil edin!',
-    brandName: 'Enatega',
-    welcomeText: 'Enatega-ya Xoş Gəlmisiniz',
+    brandName: 'ZeGo',
+    welcomeText: 'ZeGo-ya Xoş Gəlmisiniz',
     createAccountDesc:
       'Ən yaxşı restoranlardan həzz alın və ya yaxınlıqdakı mağazalardan ehtiyaclarınızı çatdırın',
     phoneNumber: 'Telefon Nömrəsi',
@@ -635,7 +635,7 @@ export const az = {
     Done: 'Tamam',
     addMessage: 'Mesaj Əlavə Et',
     kindlyBeAdvisedText: 'Xahiş olunur ki, mesajınızın sifarişinizi məkana çatdıracaq kuryer tərəfindən də görünə biləcəyini nəzərə alasınız.',
-    exploreYallaCities: 'Enatega Şəhərlərini Kəşf Et',
+    exploreYallaCities: 'ZeGo Şəhərlərini Kəşf Et',
     Card: 'Kart',
     lebelAlreadyExist: "'{{selectedLabel}}' etiketi artıq mövcuddur. Zəhmət olmasa başqa birini seçin.",
     UpdateAvailable: 'Yeniləmə Mövcuddur',

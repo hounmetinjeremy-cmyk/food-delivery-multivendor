@@ -33,7 +33,7 @@ export const getStoredMode = (): AppMode => {
 };
 
 export const getModeStorageKey = (key: string, mode = getStoredMode()) =>
-  SHARED_KEYS.has(key) ? key : `@enatega/${mode.toLowerCase()}/${key}`;
+  SHARED_KEYS.has(key) ? key : `@zego/${mode.toLowerCase()}/${key}`;
 
 export const modeStorage = {
   get(key: string, mode?: AppMode) {
@@ -52,7 +52,7 @@ export const modeStorage = {
 
 export const migrateLegacyMultivendorStorage = () => {
   if (typeof window === "undefined") return;
-  const migrationKey = "@enatega/multi/storage-migrated-v1";
+  const migrationKey = "@zego/multi/storage-migrated-v1";
   if (window.localStorage.getItem(migrationKey) === "true") return;
 
   for (const key of LEGACY_MODE_KEYS) {

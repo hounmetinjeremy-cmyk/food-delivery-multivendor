@@ -1,4 +1,4 @@
-# Enatega Customer App
+# ZeGo Customer App
 
 ## Requirements
 

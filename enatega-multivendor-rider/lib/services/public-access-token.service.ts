@@ -23,7 +23,7 @@ const METRICS_GENERAL = gql`
   }
 `;
 
-export const RIDER_PUBLIC_ACCESS_USER_AGENT = `Enatega-Rider-App/${Platform.OS}`;
+export const RIDER_PUBLIC_ACCESS_USER_AGENT = `ZeGo-Rider-App/${Platform.OS}`;
 
 class PublicAccessTokenService {
   private static instance: PublicAccessTokenService;

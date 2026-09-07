@@ -86,7 +86,7 @@ i18next.use(initReactI18next).init({
 
 const applyStoredLanguage = async (): Promise<void> => {
   try {
-    const storedLang = await AsyncStorage.getItem("enatega-language");
+    const storedLang = await AsyncStorage.getItem("zego-language");
     const initialLang = storedLang || defaultLanguage;
 
     await i18next.changeLanguage(initialLang);

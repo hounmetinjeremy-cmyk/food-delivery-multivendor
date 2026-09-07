@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { APP_MODES } from './constants'
 
 const SHARED_KEYS = new Set([
-  'enatega-language',
-  'enatega-language-name',
+  'zego-language',
+  'zego-language-name',
   'appTheme',
   'knownOrderOrigins',
   'pendingOrderNavigation'
@@ -12,7 +12,7 @@ const SHARED_KEYS = new Set([
 
 export const getModeStorageKey = (key, mode) => {
   if (SHARED_KEYS.has(key)) return key
-  return `@enatega/${mode.toLowerCase()}/${key}`
+  return `@zego/${mode.toLowerCase()}/${key}`
 }
 
 export const getModeItem = (key, mode) =>

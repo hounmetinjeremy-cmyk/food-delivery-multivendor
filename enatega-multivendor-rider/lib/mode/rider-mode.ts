@@ -26,20 +26,20 @@ export const getForcedRiderServerMode = (): RiderServerMode | null => {
 };
 
 export const RIDER_SERVER_MODE_STORAGE_KEY =
-  "@enatega/rider/selected-server-mode";
-const RIDER_STORAGE_MIGRATION_KEY = "@enatega/rider/server-storage-migrated-v1";
+  "@zego/rider/selected-server-mode";
+const RIDER_STORAGE_MIGRATION_KEY = "@zego/rider/server-storage-migrated-v1";
 
 export const getRiderTokenKey = (mode: RiderServerMode) =>
-  `enatega-rider-${mode.toLowerCase()}-token`;
+  `zego-rider-${mode.toLowerCase()}-token`;
 
 export const getRiderIdKey = (mode: RiderServerMode) =>
-  `enatega-rider-${mode.toLowerCase()}-id`;
+  `zego-rider-${mode.toLowerCase()}-id`;
 
 export const getHandledNotificationKey = (mode: RiderServerMode) =>
-  `@enatega/rider/${mode.toLowerCase()}/last-notification-id`;
+  `@zego/rider/${mode.toLowerCase()}/last-notification-id`;
 
 export const getChatUnreadKey = (mode: RiderServerMode) =>
-  `@enatega/rider/${mode.toLowerCase()}/chat-unread`;
+  `@zego/rider/${mode.toLowerCase()}/chat-unread`;
 
 export const isRiderServerMode = (
   value: string | null,

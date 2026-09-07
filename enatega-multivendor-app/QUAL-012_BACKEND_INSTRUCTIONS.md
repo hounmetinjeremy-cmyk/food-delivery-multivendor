@@ -25,7 +25,7 @@ data — no further app change required.
 
 ## What is needed from the backend (to actually enable the filters)
 
-The customer server (e.g. `aws-server-v2.enatega.com`, a separate repo) and the admin panel
+The customer server (e.g. `aws-server-v2.zego.com`, a separate repo) and the admin panel
 need these changes. Field names must stay exactly `freeDelivery` and `acceptVouchers`
 (booleans) to match the app and the web interfaces
 (`enatega-multivendor-web/lib/utils/interfaces/restaurants.interface.ts`).

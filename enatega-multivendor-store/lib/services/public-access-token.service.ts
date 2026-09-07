@@ -30,7 +30,7 @@ const KEYS = {
   EXPIRY: "sess_ttl_ts",
 };
 
-export const STORE_PUBLIC_ACCESS_USER_AGENT = `Enatega-Store-App/${Platform.OS}`;
+export const STORE_PUBLIC_ACCESS_USER_AGENT = `ZeGo-Store-App/${Platform.OS}`;
 
 class PublicAccessTokenService {
   private static instance: PublicAccessTokenService;

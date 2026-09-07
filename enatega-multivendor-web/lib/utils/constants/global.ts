@@ -9,7 +9,7 @@ import {
 import { ISeverityStyles } from "../interfaces/toast.interface";
 
 // Prices
-export const APP_NAME = "Enatega";
+export const APP_NAME = "ZeGo";
 export const LOGO_URL = "/";
 
 export const MIN_PRICE = 0.0;

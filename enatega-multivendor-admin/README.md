@@ -1,4 +1,4 @@
-# Enatega Admin Dashboard
+# ZeGo Admin Dashboard
 
 ## Requirements
 

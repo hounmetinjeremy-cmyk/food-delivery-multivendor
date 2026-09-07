@@ -137,7 +137,7 @@ const setupApollo = ({
           authorization: token && !hasExpiredUserToken ? `Bearer ${token}` : '',
           'x-platform': Platform.OS,
           'accept-language': i18n.language || 'en',
-          'user-agent': `EnategaApp/${Platform.OS}`
+          'user-agent': `ZeGoApp/${Platform.OS}`
         }
       }
     }
@@ -164,7 +164,7 @@ const setupApollo = ({
           ? { 'bop-auth': publicToken ? `Bearer ${publicToken}` : '' }
           : {}),
         ...(publicAccessRequired ? { nonce } : {}),
-        'user-agent': `EnategaApp/${Platform.OS}`,
+        'user-agent': `ZeGoApp/${Platform.OS}`,
         'accept-language': 'en-US',
         'x-platform': Platform.OS
       }

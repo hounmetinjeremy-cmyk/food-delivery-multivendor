@@ -1,4 +1,4 @@
-# Enatega Store App
+# ZeGo Store App
 
 ## Requirements
 

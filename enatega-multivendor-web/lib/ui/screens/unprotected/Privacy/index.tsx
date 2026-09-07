@@ -17,7 +17,7 @@ const Privacy = () => {
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
           <h1 className="text-white text-3xl md:text-5xl font-bold text-center">
-            {t("Enatega_privacy_policy")}
+            {t("ZeGo_privacy_policy")}
           </h1>
         </div>
       </div>

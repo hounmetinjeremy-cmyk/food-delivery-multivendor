@@ -275,7 +275,7 @@ secureAccountWithPhone: 'נשתמש במספר שלך רק אם נצטרך לי�
   useCurrentLocation: 'השתמש במיקום הנוכחי',
   locationPermissionMessage:
     'הקש על ההודעה הזו כדי לפתוח את ההגדרות ולאפשר לאפליקציה להשתמש במיקום מההרשאות.',
-  enategaUseYourLocationMessage:
+  zegoUseYourLocationMessage:
     'כדי למצוא מסעדות בקרבת מקומך, אנו צריכים רק את המיקום שלך',
   selectAnotherLocation: 'קבע מיקום באופן ידני',
   setLocation: 'קבע מיקום',

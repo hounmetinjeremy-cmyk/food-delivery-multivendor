@@ -4,7 +4,7 @@ export const APP_MODES = Object.freeze({
 })
 
 export const DEFAULT_APP_MODE = APP_MODES.MULTI
-export const APP_MODE_STORAGE_KEY = '@enatega/app-mode'
+export const APP_MODE_STORAGE_KEY = '@zego/app-mode'
 
 export const VENDOR_MODE_POLICIES = Object.freeze({
   TOGGLE: 'TOGGLE',

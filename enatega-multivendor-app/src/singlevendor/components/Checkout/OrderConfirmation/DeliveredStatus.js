@@ -102,7 +102,7 @@ import { scale } from '../../../../utils/scaling'
 import TextDefault from '../../../../components/Text/TextDefault/TextDefault'
 
 const DeliveredStatus = ({
-  appName = 'Enatega',
+  appName = 'ZeGo',
   title,
   subtitle,
   error = false,
@@ -130,7 +130,7 @@ const DeliveredStatus = ({
     (isCancelled
       ? t('Your order has been cancelled')
       : isPickUpOrder
-        ? t('orderCollectedMessage', { defaultValue: 'Your order has been collected. Thank you for using Enatega.' })
+        ? t('orderCollectedMessage', { defaultValue: 'Your order has been collected. Thank you for using ZeGo.' })
         : t('Your grocery has been delivered.'))
 
   return (

@@ -4,7 +4,7 @@
   <dict>
     <key>com.apple.security.application-groups</key>
     <array>
-      <string>group.com.enatega.multivendor.shared</string>
+      <string>group.com.zego.multivendor.shared</string>
     </array>
   </dict>
 </plist>

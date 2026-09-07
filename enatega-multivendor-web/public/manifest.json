@@ -1,7 +1,7 @@
 {
-  "name": "Enatega MultiVendor",
+  "name": "ZeGo MultiVendor",
   "id":"/",
-  "short_name": "Enatega",
+  "short_name": "ZeGo",
   "description": "A Progressive Web App built with Next.js",
   "start_url": "/",
   "background_color": "#000",

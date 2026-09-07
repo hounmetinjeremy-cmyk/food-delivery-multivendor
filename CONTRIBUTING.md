@@ -1,4 +1,4 @@
-# Contributing to Enatega Multi Vendor Food Delivery System
+# Contributing to ZeGo Multi Vendor Food Delivery System
 
 First off, thank you for considering contributing to our project! Your help is greatly appreciated.
 

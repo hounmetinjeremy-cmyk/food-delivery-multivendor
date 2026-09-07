@@ -17,7 +17,7 @@ const LANGUAGE_LOADERS = {
 type SupportedLanguage = keyof typeof LANGUAGE_LOADERS;
 
 const LANGUAGE_KEY = "lang";
-const LEGACY_LANGUAGE_KEY = "enatega-language";
+const LEGACY_LANGUAGE_KEY = "zego-language";
 const DEFAULT_LANGUAGE: SupportedLanguage = "en";
 
 const normalizeLanguage = (language?: string | null): SupportedLanguage =>

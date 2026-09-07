@@ -26,12 +26,12 @@ module.exports = () => {
   ]
 
   return {
-    name: 'Enatega Multi',
+    name: 'ZeGo Multi',
     scheme: 'enategamultivendor',
     version: '1.1.41',
     description:
-      "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
-    slug: 'enategamultivendor',
+      "ZeGo is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
+    slug: 'zegomultivendor',
     owner: 'ninjas_code',
     experiments: {
       buildCacheProvider: 'eas'
@@ -52,7 +52,7 @@ module.exports = () => {
         'com.apple.developer.networking.wifi-info': true,
         'com.apple.developer.usernotifications.time-sensitive': true,
         'com.apple.security.application-groups': [
-          'group.com.enatega.multivendor.shared'
+          'group.com.zego.multivendor.shared'
         ],
         // Use the production APNs gateway for production builds so push
         // notifications are not silently rejected on App Store devices (SEC-013).
@@ -76,7 +76,7 @@ module.exports = () => {
         ITSAppUsesNonExemptEncryption: false
       },
       privacyManifests: {
-        // Enatega uses first-party product analytics and diagnostics only. It
+        // ZeGo uses first-party product analytics and diagnostics only. It
         // does not link app data with third-party data for advertising, share
         // data with brokers, or access IDFA.
         NSPrivacyTracking: false,
@@ -93,7 +93,7 @@ module.exports = () => {
       color: '#90E36D',
       icon: './assets/not-icon.png',
       androidMode: 'default',
-      androidCollapsedTitle: 'Enatega Multivendor'
+      androidCollapsedTitle: 'ZeGo Multivendor'
     },
     android: {
       versionCode: 144,
@@ -175,7 +175,7 @@ module.exports = () => {
         'expo-location',
         {
           locationAlwaysAndWhenInUsePermission:
-            'Allow $Enatega Multivendor to use your location.'
+            'Allow $ZeGo Multivendor to use your location.'
         }
       ],
       '@react-native-firebase/app',
@@ -219,8 +219,8 @@ module.exports = () => {
         (process.env.NODE_ENV !== 'production' ? 'Customer@12345' : ''),
       liveActivity: {
         appGroupId: 'group.com.enatega.multivendor.shared',
-        appScheme: 'enategamultivendor',
-        brandName: 'Enatega',
+        appScheme: 'zegomultivendor',
+        brandName: 'ZeGo',
         primaryColor: '#90E36D',
         accentColor: '#FFA921',
         logoResourceName: 'enatega_logo',

@@ -9,9 +9,9 @@ const androidGoogleMapsApiKey =
 
 module.exports = {
   expo: {
-    name: 'Enatega Multivendor Rider',
+    name: 'ZeGo Multivendor Rider',
     description:
-      "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
+      "ZeGo is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
     version: '1.1.95',
     slug: 'food-delivery-rider-multivendor',
     orientation: 'portrait',
@@ -26,7 +26,7 @@ module.exports = {
         'expo-location',
         {
           locationAlwaysAndWhenInUsePermission:
-            'Enatega Multivendor Rider uses your precise location during active deliveries so customers and dispatchers can follow delivery progress even when the app is not in use.',
+            'ZeGo Multivendor Rider uses your precise location during active deliveries so customers and dispatchers can follow delivery progress even when the app is not in use.',
           isIosBackgroundLocationEnabled: true,
           isAndroidBackgroundLocationEnabled: true,
           isAndroidForegroundServiceEnabled: true
@@ -65,7 +65,7 @@ module.exports = {
         '@sentry/react-native/expo',
         {
           organization: 'ninjas-code',
-          project: 'enatega-rider-app',
+          project: 'zego-rider-app',
           url: 'https://sentry.io/'
         }
       ],

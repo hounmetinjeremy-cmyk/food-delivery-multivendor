@@ -5,7 +5,7 @@ import IntlProvider from '@/lib/providers/intl-provider';
 
 // ✅ Add metadata export for favicon
 export const metadata = {
-  title: 'Enatega Admin Dashboard',
+  title: 'ZeGo Admin Dashboard',
   icons: {
     icon: '/favsicons.png',
     // You can add more like:

@@ -18,7 +18,7 @@ export const nl = {
     getStarted: 'Begin nu!',
     welcome:
       'Welkom bij Yalla, soms heb je alleen liefde nodig. Maar een beetje eten op zijn tijd doet ook geen kwaad.',
-    welcomeScreen: 'Welkom bij Enatega',
+    welcomeScreen: 'Welkom bij ZeGo',
     loginBtn: 'Inloggen',
     registerBtn: 'Registreren',
     name: 'Naam',
@@ -283,7 +283,7 @@ export const nl = {
     useCurrentLocation: 'Gebruik Huidige Locatie',
     locationPermissionMessage:
       'Tik op dit bericht om Instellingen te openen en de app toestemming te geven om je locatie te gebruiken.',
-    enategaUseYourLocationMessage:
+    zegoUseYourLocationMessage:
       'Om restaurants bij jou in de buurt te vinden, hebben we alleen je locatie nodig',
     selectAnotherLocation: 'Locatie Handmatig Instellen',
     setLocation: 'Locatie Instellen',
@@ -575,8 +575,8 @@ export const nl = {
     none: 'geen',
     yourEmail: 'Log eenvoudig in door je e-mail in te voeren!',
     yourEmailPassword: 'Voer nu je wachtwoorden in voor toegang!',
-    brandName: 'Enatega',
-    welcomeText: 'Welkom bij Enatega',
+    brandName: 'ZeGo',
+    welcomeText: 'Welkom bij ZeGo',
     createAccountDesc:
       'Geniet van de beste restaurants of haal wat je nodig hebt uit nabijgelegen winkels, bezorgd',
     phoneNumber: 'Telefoonnummer',
@@ -636,7 +636,7 @@ export const nl = {
     Done: 'Klaar',
     addMessage: 'Bericht Toevoegen',
     kindlyBeAdvisedText: 'Houd er rekening mee dat je bericht ook zichtbaar kan zijn voor de koerierpartner die verantwoordelijk is voor het bezorgen van je bestelling op de locatie.',
-    exploreYallaCities: 'Ontdek Enatega Steden',
+    exploreYallaCities: 'Ontdek ZeGo Steden',
     Card: 'Kaart',
     lebelAlreadyExist: "Het label '{{selectedLabel}}' bestaat al. Kies een andere.",
     UpdateAvailable: 'Update Beschikbaar',

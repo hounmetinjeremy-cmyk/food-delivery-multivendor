@@ -19,9 +19,9 @@ export const getForcedStoreServerMode = (): StoreServerMode | null => {
   if (policy === STORE_SERVER_MODES.MULTI) return STORE_SERVER_MODES.MULTI;
   return null;
 };
-export const STORE_SERVER_MODE_KEY = "@enatega/store/server-mode";
+export const STORE_SERVER_MODE_KEY = "@zego/store/server-mode";
 
-const STORE_STORAGE_MIGRATION_KEY = "@enatega/store/server-storage-migrated-v1";
+const STORE_STORAGE_MIGRATION_KEY = "@zego/store/server-storage-migrated-v1";
 
 export const isStoreServerMode = (
   value: string | null,
@@ -31,10 +31,10 @@ export const isStoreServerMode = (
 const modeSuffix = (mode: StoreServerMode) => mode.toLowerCase();
 
 export const getStoreTokenKey = (mode: StoreServerMode) =>
-  `enatega-store-${modeSuffix(mode)}-token`;
+  `zego-store-${modeSuffix(mode)}-token`;
 
 export const getStoreIdKey = (mode: StoreServerMode) =>
-  `enatega-store-${modeSuffix(mode)}-id`;
+  `zego-store-${modeSuffix(mode)}-id`;
 
 export const migrateLegacyStoreSession = async (): Promise<void> => {
   const hasMigrated = await AsyncStorage.getItem(STORE_STORAGE_MIGRATION_KEY);

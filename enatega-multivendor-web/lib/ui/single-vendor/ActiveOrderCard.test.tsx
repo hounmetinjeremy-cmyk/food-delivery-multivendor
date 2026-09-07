@@ -18,7 +18,7 @@ vi.mock("@apollo/client", async (importOriginal) => {
             orderId: "SV-1042",
             orderStatus: "ACCEPTED",
             orderAmount: 24.5,
-            restaurant: { name: "Enatega Market" },
+            restaurant: { name: "ZeGo Market" },
             deliveryAddress: { deliveryAddress: "Main Street" },
             items: [{ _id: "item-1", title: "Apples", quantity: 2 }],
           },
@@ -61,7 +61,7 @@ describe("SingleVendorActiveOrderCard", () => {
       name: "Track your order",
     });
     expect(trackingLink).toHaveAttribute("href", "/order/SV-1042/tracking");
-    expect(screen.getByText("Enatega Market")).toBeInTheDocument();
+    expect(screen.getByText("ZeGo Market")).toBeInTheDocument();
     expect(screen.getByText("$24.50")).toBeInTheDocument();
     expect(trackingLink).not.toHaveAttribute(
       "href",

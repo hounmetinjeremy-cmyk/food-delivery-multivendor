@@ -13,8 +13,8 @@ const MULTI_GRAPHQL_URL =
   // "https://backup-server.enatega.com/graphql";
 const MULTI_WS_GRAPHQL_URL =
   process.env.EXPO_PUBLIC_WS_GRAPHQL_URL ??
-  "wss://aws-server-v2.enatega.com/graphql";
-  // "wss://backup-server.enatega.com/graphql";
+  "wss://aws-server-v2.zego.com/graphql";
+  // "wss://backup-server.zego.com/graphql";
 const SINGLE_GRAPHQL_URL =
   process.env.EXPO_PUBLIC_SINGLE_VENDOR_GRAPHQL_URL;
 const SINGLE_WS_GRAPHQL_URL =

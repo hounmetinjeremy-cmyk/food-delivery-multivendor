@@ -87,7 +87,7 @@ export default function useNotification() {
       ) {
         const { _id } = response.notification.request.content.data;
         if (typeof _id !== "string") return;
-        const handledNotificationKey = `@enatega/store/${mode.toLowerCase()}/last-notification`;
+        const handledNotificationKey = `@zego/store/${mode.toLowerCase()}/last-notification`;
         const lastNotificationHandledId = await AsyncStorage.getItem(
           handledNotificationKey,
         );

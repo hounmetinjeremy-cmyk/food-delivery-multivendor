@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Enatega serves people ordering food, groceries, and other local goods for delivery or pickup. They typically arrive with a location and an immediate need to discover what is available, compare options, place an order, and track it. The same customer website can operate as a neighborhood multivendor marketplace or as a focused single-vendor storefront.
+ZeGo serves people ordering food, groceries, and other local goods for delivery or pickup. They typically arrive with a location and an immediate need to discover what is available, compare options, place an order, and track it. The same customer website can operate as a neighborhood multivendor marketplace or as a focused single-vendor storefront.
 
 Secondary audiences use the public marketing surfaces to evaluate becoming a restaurant, store, or rider partner.
 
@@ -18,7 +18,7 @@ Turn a customer's location into an actionable local marketplace, carry them from
 
 ## Positioning
 
-Enatega provides one adaptable customer experience for two distinct operating models: a multivendor neighborhood marketplace spanning restaurants and stores, and a single-vendor catalog with deals, categories, and direct ordering. Mode-specific carts and active orders remain isolated while customers can move safely between services.
+ZeGo provides one adaptable customer experience for two distinct operating models: a multivendor neighborhood marketplace spanning restaurants and stores, and a single-vendor catalog with deals, categories, and direct ordering. Mode-specific carts and active orders remain isolated while customers can move safely between services.
 
 ## Operating Context
 
@@ -36,7 +36,7 @@ Customers browse by current or saved delivery address, search nearby vendors or 
 
 ## Brand Commitments
 
-- Preserve the Enatega name and existing logo.
+- Preserve the ZeGo name and existing logo.
 - Preserve the current primary green family: `#75D04B` primary, `#F3FFEE` light, `#5AC12F` dark, plus the established hover, pressed, focus, and disabled states.
 - The shipped visual direction is **Quiet Orbit**: an elegant pure-white multivendor landing canvas with precise Inter typography, restrained Cormorant Garamond italic accents, brand-green route geometry, pale-sage grounding fields, and address-first interaction.
 - The result must avoid generic AI/SaaS styling, interchangeable food-delivery templates, gratuitous glass effects, excessive rounded cards, decorative gradients, and ungrounded marketing copy.
@@ -53,7 +53,7 @@ Customers browse by current or saved delivery address, search nearby vendors or 
 ## Product Principles
 
 - Location and availability come before promotion.
-- Make the two operating modes distinct in task hierarchy but unmistakably one Enatega product.
+- Make the two operating modes distinct in task hierarchy but unmistakably one ZeGo product.
 - Show real marketplace information and state instead of generic claims or decorative chrome.
 - Keep ordering fast on mobile while using desktop space for comparison and context.
 - Accessibility, localization, RTL behavior, resilience, and honest system states are part of the design, not finishing work.

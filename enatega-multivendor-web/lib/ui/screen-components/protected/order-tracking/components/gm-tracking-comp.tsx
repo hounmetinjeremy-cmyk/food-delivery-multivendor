@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import HomeIcon from "../../../../../assets/home_icon.png";
 import RiderIcon from "../../../../../assets/rider_icon.png";
-import StoreIcon from "../../../../../assets/enatega-logo.png";
+import StoreIcon from "../../../../../assets/zego-logo.png";
 import Image from "@/lib/ui/useable-components/safe-image";
 import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
 import { useTheme } from "@/lib/providers/ThemeProvider";

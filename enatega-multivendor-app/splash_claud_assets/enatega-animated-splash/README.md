@@ -1,4 +1,4 @@
-# Enatega Animated Splash (React Native / Expo component)
+# ZeGo Animated Splash (React Native / Expo component)
 
 Native port of the approved splash video. One component replaces both theme videos:
 it reads the system theme at runtime, scales to every screen size and aspect ratio
@@ -8,9 +8,9 @@ it reads the system theme at runtime, scales to every screen size and aspect rat
 
 ```
 AnimatedSplash.js        the component (self-contained)
-assets/pin.png           Enatega pin logo (transparent, 2x)
-assets/wordmarkWhite.png ENATEGA wordmark for dark theme
-assets/wordmarkNavy.png  ENATEGA wordmark for light theme
+assets/pin.png           ZeGo pin logo (transparent, 2x)
+assets/wordmarkWhite.png ZEGO wordmark for dark theme
+assets/wordmarkNavy.png  ZEGO wordmark for light theme
 assets/glow.png          radial green glow (shared by orbs + logo glow)
 ```
 
@@ -18,7 +18,7 @@ Total assets ≈ 250 KB — smaller than a single splash video, shared by both t
 
 ## Requirements
 
-Already present in the Enatega apps — no new packages:
+Already present in the ZeGo apps — no new packages:
 
 - `react-native-reanimated` (v2 or v3)
 - `expo-linear-gradient`

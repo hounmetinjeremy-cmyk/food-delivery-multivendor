@@ -1,5 +1,5 @@
 ---
-name: "Enatega Quiet Orbit"
+name: "ZeGo Quiet Orbit"
 description: "An elegant everyday-delivery system shaped by a pure-white landing canvas, precise type, alpha product still lifes, and brand-green route geometry."
 colors:
   primary: "#75d04b"
@@ -101,13 +101,13 @@ components:
     size: "128px"
 ---
 
-# Design System: Enatega Quiet Orbit
+# Design System: ZeGo Quiet Orbit
 
 ## Overview
 
 **Creative North Star: "Quiet Orbit"**
 
-Quiet Orbit makes Enatega feel like one elegant everyday-delivery system. The multivendor root uses a pure-white canvas; charcoal carries information; pale sage grounds product objects; brand green appears as a route signal, active state, or decisive action. Editorial italic phrases add humanity without turning the interface into a magazine pastiche.
+Quiet Orbit makes ZeGo feel like one elegant everyday-delivery system. The multivendor root uses a pure-white canvas; charcoal carries information; pale sage grounds product objects; brand green appears as a route signal, active state, or decisive action. Editorial italic phrases add humanity without turning the interface into a magazine pastiche.
 
 The system is spacious, precise, and product-led. Alpha-validated isolated still lifes, autonomous orbit markers, fine route drawings, and hairline rules explain movement without ornamental chrome. The multivendor root landing page is the fullest expression of this world: it owns the city gateway, product orbit, restored More than delivery strip, and Choose–Moving–Arrived scroll story. Those compositions are route-specific and must not be copied into discovery or other transactional screens.
 
@@ -121,11 +121,11 @@ The system is spacious, precise, and product-led. Alpha-validated isolated still
 
 ## Colors
 
-The palette is a quiet neutral field punctuated by Enatega green; light and dark tokens preserve the same hierarchy rather than changing the brand character.
+The palette is a quiet neutral field punctuated by ZeGo green; light and dark tokens preserve the same hierarchy rather than changing the brand character.
 
 ### Primary
 
-- **Route Green:** The core Enatega signal for key actions, route strokes, progress, indices, and small accents.
+- **Route Green:** The core ZeGo signal for key actions, route strokes, progress, indices, and small accents.
 - **Deep Route Green:** The stronger accessible green for linework, active tabs, editorial accents, and hover states.
 - **Soft Route Tint:** A pale sage-green surface for selected rows, orbit previews, and gradual section transitions.
 

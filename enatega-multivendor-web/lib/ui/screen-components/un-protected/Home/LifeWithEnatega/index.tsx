@@ -14,7 +14,7 @@ import CustomerApp from "@/public/assets/images/png/CustomerApp.png"
 import { useTranslations } from "next-intl";
 
 
-const EnategaInfo: React.FC = () => {
+const ZeGoInfo: React.FC = () => {
   const t = useTranslations();
   return (
     <div className="mt-[80px] mb-[80px]">
@@ -53,4 +53,4 @@ const EnategaInfo: React.FC = () => {
   );
 };
 
-export default EnategaInfo;
+export default ZeGoInfo;

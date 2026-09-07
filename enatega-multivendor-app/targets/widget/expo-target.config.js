@@ -10,7 +10,7 @@ module.exports = config => ({
 
   entitlements: {
     "com.apple.security.application-groups": [
-      "group.com.enatega.multivendor.shared"
+      "group.com.zego.multivendor.shared"
     ],
   },
 

@@ -12,7 +12,7 @@
 </div>
 
 <div align="center">
-  <h2>Enatega Multi Vendor Delivery Management System</h2>
+  <h2>ZeGo Multi Vendor Delivery Management System</h2>
   <i>A modern and customizable platform for managing online ordering and logistics across industries.</i>
  <br/>
 <br />
@@ -53,8 +53,8 @@
 
 <br>
 
-The Enatega Multi Vendor Delivery Management System is designed for businesses looking to deploy a complete, ready-to-use platform for running their online ordering and delivery operations. Whether it is food or grocery delivery, parcel logistics, home services, flowers, pharmacy orders, or other delivery-based businesses, Enatega can be adapted to your needs.
-Built with ease of use and intuitiveness in mind, the Enatega system supports multiple vendors and multiple service regions. With separate applications for customers, vendors and delivery agents, along with a powerful admin dashboard, Enatega enables you to launch and operate your own end-to-end ordering and delivery ecosystem without building everything from scratch.
+The ZeGo Multi Vendor Delivery Management System is designed for businesses looking to deploy a complete, ready-to-use platform for running their online ordering and delivery operations. Whether it is food or grocery delivery, parcel logistics, home services, flowers, pharmacy orders, or other delivery-based businesses, ZeGo can be adapted to your needs.
+Built with ease of use and intuitiveness in mind, the ZeGo system supports multiple vendors and multiple service regions. With separate applications for customers, vendors and delivery agents, along with a powerful admin dashboard, ZeGo enables you to launch and operate your own end-to-end ordering and delivery ecosystem without building everything from scratch.
 
 The solution is fully open source, but the backend and API are proprietary and can be licensed as part of a paid package.
 
@@ -84,11 +84,11 @@ The solution is fully open source, but the backend and API are proprietary and c
 
 ## :question: What is included: <a id="heading-1"></a>
 
-Enatega provides a complete set of software components, including:
+ZeGo provides a complete set of software components, including:
 
-- Enatega Multi Vendor Customer App
-- Enatega Multi Vendor Rider/Driver App
-- Enatega Multi Vendor Vendor/Store App
+- ZeGo Multi Vendor Customer App
+- ZeGo Multi Vendor Rider/Driver App
+- ZeGo Multi Vendor Vendor/Store App
 - Customer Ordering Website
 - Admin Web Dashboard
 - API Server
@@ -166,11 +166,11 @@ NOTE: Email provider has been only been tested for gmail accounts
 
 |                                               Expo                                                |                                                   React-Navigation                                                   |                                                Apollo GraphQL                                                |                                               ReactJS                                                |                                                NodeJS                                                 |                                                 MongoDB                                                 |                                                   Firebase                                                   |
 | :-----------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------: |
-| <a href="https://expo.dev/"><img src="./assets/expoicon.png" alt="Enatega Logos" width="100"></a> | <a href="https://reactnavigation.org/"><img src="./assets/react-navigation.png" alt="Enatega Logos" width="100"></a> | <a href="https://www.apollographql.com/"><img src="./assets/apollo.png" alt="Enatega Logos" width="100"></a> | <a href="https://reactjs.org/"><img src="./assets/react-js.png" alt="Enatega Logos" width="100"></a> | <a href="https://nodejs.org/en/"><img src="./assets/node-js.png" alt="Enatega Logos" width="100"></a> | <a href="https://www.mongodb.com/"><img src="./assets/mongoDB.png" alt="Enatega Logos" width="100"></a> | <a href="https://firebase.google.com/"><img src="./assets/firebase.png" alt="Enatega Logos" width="100"></a> |
+| <a href="https://expo.dev/"><img src="./assets/expoicon.png" alt="ZeGo Logos" width="100"></a> | <a href="https://reactnavigation.org/"><img src="./assets/react-navigation.png" alt="ZeGo Logos" width="100"></a> | <a href="https://www.apollographql.com/"><img src="./assets/apollo.png" alt="ZeGo Logos" width="100"></a> | <a href="https://reactjs.org/"><img src="./assets/react-js.png" alt="ZeGo Logos" width="100"></a> | <a href="https://nodejs.org/en/"><img src="./assets/node-js.png" alt="ZeGo Logos" width="100"></a> | <a href="https://www.mongodb.com/"><img src="./assets/mongoDB.png" alt="ZeGo Logos" width="100"></a> | <a href="https://firebase.google.com/"><img src="./assets/firebase.png" alt="ZeGo Logos" width="100"></a> |
 
 |                                                 React Native                                                 |                                                       React Router                                                       |                                                GraphQL                                                |                                                ExpressJS                                                 |                                                   React Strap                                                    |                                                Amplitude                                                |
 | :----------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: |
-| <a href="https://reactnative.dev/"><img src="./assets/react-native.png" alt="Enatega Logos" width="100"></a> | <a href="https://reactrouter.com/"><img src="./assets/react-router-svgrepo-com.png" alt="Enatega Logos" width="100"></a> | <a href="https://graphql.org/"><img src="./assets/graphQl-1.png" alt="Enatega Logos" width="100"></a> | <a href="https://expressjs.com/"><img src="./assets/express-js.png" alt="Enatega Logos" width="100"></a> | <a href="https://reactstrap.github.io/"><img src="./assets/React-strap.png" alt="Enatega Logos" width="100"></a> | <a href="https://amplitude.com/"><img src="./assets/amplitude.png" alt="Enatega Logos" width="100"></a> |
+| <a href="https://reactnative.dev/"><img src="./assets/react-native.png" alt="ZeGo Logos" width="100"></a> | <a href="https://reactrouter.com/"><img src="./assets/react-router-svgrepo-com.png" alt="ZeGo Logos" width="100"></a> | <a href="https://graphql.org/"><img src="./assets/graphQl-1.png" alt="ZeGo Logos" width="100"></a> | <a href="https://expressjs.com/"><img src="./assets/express-js.png" alt="ZeGo Logos" width="100"></a> | <a href="https://reactstrap.github.io/"><img src="./assets/React-strap.png" alt="ZeGo Logos" width="100"></a> | <a href="https://amplitude.com/"><img src="./assets/amplitude.png" alt="ZeGo Logos" width="100"></a> |
 
 ## :framed_picture: Screenshots: <a id="heading-6"></a>
 
@@ -200,7 +200,7 @@ NOTE: Email provider has been only been tested for gmail accounts
 
 ## :book: Documentation <a id="heading-8"></a>
 
-Find the link for the complete documentation of the Enatega Multi Vendor Solution [here](https://enatega.com/multivendor-documentation/).
+Find the link for the complete documentation of the ZeGo Multi Vendor Solution [here](https://enatega.com/multivendor-documentation/).
 
 ## :tv: Demo Videos: <a id="heading-14"></a>
 
@@ -212,7 +212,7 @@ Find the link for the complete documentation of the Enatega Multi Vendor Solutio
 
 |                                                                                                                                               Customer App                                                                                                                                                |                                                                                                                                                   Rider App                                                                                                                                                    |                                                                                                                                                       Store App                                                                                                                                                        |                                                   Customer Web                                                   |                                                    Admin Dashboard                                                     |
 | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------: |
-|                                                                                          <a href="#heading-9" style="pointer-events: none;"><img src="./assets/customer-app-logo.png" alt="Enatega Logos" width="180"></a>                                                                                           |                                                                                          <a href="#heading-9" style="pointer-events: none;"><img src="./assets/Rider-app-logo.png" alt="Enatega Logos" width="180"></a>                                                                                          |                                                                                            <a href="#heading-9" style="pointer-events: none;"><img src="./assets/Store-app-logo.png" alt="Enatega Logos" width="180"></a>                                                                                            | <a href="http://multivendor.enatega.com/"><img src="./assets/customer-app-logo.png" alt="Enatega Logos" width="180"></a> | <a href="http://multivendor-admin.enatega.com/"><img src="./assets/customer-app-logo.png" alt="Enatega Logos" width="180"></a> |
+|                                                                                          <a href="#heading-9" style="pointer-events: none;"><img src="./assets/customer-app-logo.png" alt="ZeGo Logos" width="180"></a>                                                                                           |                                                                                          <a href="#heading-9" style="pointer-events: none;"><img src="./assets/Rider-app-logo.png" alt="ZeGo Logos" width="180"></a>                                                                                          |                                                                                            <a href="#heading-9" style="pointer-events: none;"><img src="./assets/Store-app-logo.png" alt="ZeGo Logos" width="180"></a>                                                                                            | <a href="http://multivendor.enatega.com/"><img src="./assets/customer-app-logo.png" alt="ZeGo Logos" width="180"></a> | <a href="http://multivendor-admin.enatega.com/"><img src="./assets/customer-app-logo.png" alt="ZeGo Logos" width="180"></a> |
 | <a href="https://play.google.com/store/apps/details?id=com.enatega.multivendor"><img src="./assets/android_518705.png" alt="Android Logo" width="25"></a> <a href="https://apps.apple.com/pk/app/enatega-multivendor/id1526488093"><img src="./assets/social_10096939.png" alt="iOS Logo" width="25"></a> | <a href="https://play.google.com/store/apps/details?id=com.enatega.multirider"><img src="./assets/android_518705.png" alt="Android Logo" width="25"></a> <a href="https://apps.apple.com/pk/app/enatega-mulitvendor-rider/id1526674511"><img src="./assets/social_10096939.png" alt="iOS Logo" width="25"></a> | <a href="https://play.google.com/store/apps/details?id=multivendor.enatega.restaurant"><img src="./assets/android_518705.png" alt="Android Logo" width="25"></a> <a href="https://apps.apple.com/pk/app/enatega-multivendor-restaurant/id1526672537"><img src="./assets/social_10096939.png" alt="iOS Logo" width="25"></a> |
 
 ## :people_holding_hands: Contributors: <a id="heading-10"></a>
@@ -230,11 +230,11 @@ The frontend source code for our solution is completely open source. However, th
 
 ## :mailbox_with_mail: Contact Us: <a id="heading-13"></a>
 
-[Check out the Product Page and Pricing and more for Enatega Multivendor Food Delivery Solution](https://enatega.com/?utm_source=github&utm_medium=referral&utm_campaign=github_guide&utm_id=12345678)
+[Check out the Product Page and Pricing and more for ZeGo Multivendor Food Delivery Solution](https://enatega.com/?utm_source=github&utm_medium=referral&utm_campaign=github_guide&utm_id=12345678)
 
 ## :computer: Project Setup Guide <a id="heading-15"></a>
 
-This section provides detailed instructions for setting up and running each component of the Enatega Multi-vendor Food Delivery Solution.
+This section provides detailed instructions for setting up and running each component of the ZeGo Multi-vendor Food Delivery Solution.
 
 ### Quick Run Matrix
 
@@ -253,7 +253,7 @@ This section provides detailed instructions for setting up and running each comp
 2. Start `enatega-multivendor-admin` or `enatega-multivendor-web`
 3. Start the mobile app you need from `enatega-multivendor-app`, `enatega-multivendor-store`, or `enatega-multivendor-rider`
 
-### Enatega Admin Dashboard (Next.js)
+### ZeGo Admin Dashboard (Next.js)
 
 The admin dashboard allows you to manage restaurants, orders, riders, and more.
 
@@ -270,7 +270,7 @@ npm run dev
 
 After running these commands, open your browser and navigate to [http://localhost:3000](http://localhost:3000) to access the admin dashboard. You can also CTRL+click on the localhost link that appears in your terminal.
 
-### Enatega Customer Web (React.js)
+### ZeGo Customer Web (React.js)
 
 The customer web application allows users to browse restaurants and place orders through a web browser.
 
@@ -287,7 +287,7 @@ npm start
 
 After running these commands, the application will be available at [http://localhost:3000](http://localhost:3000) in your web browser.
 
-### Enatega Customer App (React Native)
+### ZeGo Customer App (React Native)
 
 The customer mobile application allows users to browse restaurants and place orders on their mobile devices.
 
@@ -311,7 +311,7 @@ npm start -c
    - Android: Open the Expo Go app and scan the QR code
    - iOS: Use the device's camera app to scan the QR code
 
-### Enatega Rider App (React Native)
+### ZeGo Rider App (React Native)
 
 The rider app allows delivery personnel to manage and complete deliveries.
 
@@ -335,7 +335,7 @@ npm start -c
    - Android: Open the Expo Go app and scan the QR code
    - iOS: Use the device's camera app to scan the QR code
 
-### Enatega Restaurant App (React Native)
+### ZeGo Restaurant App (React Native)
 
 The restaurant app allows restaurant owners to manage orders and their menu.
 

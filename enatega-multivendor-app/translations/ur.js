@@ -265,7 +265,7 @@ export const ur = {
     currentLocation: 'موجودہ لوکیشن',
     useCurrentLocation: 'موجودہ لوکیشن استعمال کریں',
     locationPermissionMessage: 'اس پیغام پر کلک کریں تاکہ سیٹنگز کھولی جا سکے، پھر ایپ کو اجازتوں سے لوکیشن استعمال کرنے کی اجازت دیں۔',
-    enategaUseYourLocationMessage: 'آپ کے قریب کے ریسٹورنٹس تلاش کرنے کے لیے، ہمیں صرف آپ کی لوکیشن کی ضرورت ہے',
+    zegoUseYourLocationMessage: 'آپ کے قریب کے ریسٹورنٹس تلاش کرنے کے لیے، ہمیں صرف آپ کی لوکیشن کی ضرورت ہے',
     selectAnotherLocation: 'لوکیشن کو دستی طور پر سیٹ کریں',
     setLocation: 'لوکیشن سیٹ کریں',
     cartIsEmpty: 'ٹوکری خالی ہے',

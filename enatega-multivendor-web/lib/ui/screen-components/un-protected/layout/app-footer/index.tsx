@@ -17,8 +17,8 @@ const AppFooter = () => {
     pathname?.endsWith("/discovery") ||
     pathname?.endsWith("/store");
 
-  const partnerWithEnatega = {
-    title: t("Footer.partnerWithEnatega"),
+  const partnerWithZeGo = {
+    title: t("Footer.partnerWithZeGo"),
     links: [
       { label: t("Footer.home"), link: "/", internal: true },
       { label: t("Footer.forRiders"), link: "/rider", internal: true },
@@ -30,12 +30,12 @@ const AppFooter = () => {
     title: t("Footer.products"),
     links: [
       {
-        label: t("Footer.enategaRider"),
+        label: t("Footer.zegoRider"),
         link: "https://play.google.com/store/apps/details?id=com.enatega.multirider&hl=en",
         internal: false,
       },
       {
-        label: t("Footer.enategaRestaurant"),
+        label: t("Footer.zegoRestaurant"),
         link: "https://play.google.com/store/apps/details?id=multivendor.enatega.restaurant&hl=en",
         internal: false,
       },
@@ -101,7 +101,7 @@ const AppFooter = () => {
               ))}
             </nav>
             <p className="text-xs text-white/45">
-              © {new Date().getFullYear()} Enatega. {t("Landing.footer.rights")}
+              © {new Date().getFullYear()} ZeGo. {t("Landing.footer.rights")}
             </p>
           </div>
         </div>
@@ -120,7 +120,7 @@ const AppFooter = () => {
             <AppLinks />
           </div>
           <div className="p-2">
-            <FooterLinks section={partnerWithEnatega} />
+            <FooterLinks section={partnerWithZeGo} />
           </div>
           <div className="p-2">
             <FooterLinks section={products} />

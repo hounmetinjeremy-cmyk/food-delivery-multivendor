@@ -25,11 +25,11 @@ export default function LanguageMain() {
   // Handlers
   const handleLanguageSelection = async (selectedLanguage: string) => {
     setIsSelected(selectedLanguage);
-    await AsyncStorage.setItem("enatega-language", selectedLanguage);
+    await AsyncStorage.setItem("zego-language", selectedLanguage);
   };
   const handleSetCurrentLanguage = async () => {
     try {
-      const lng = await AsyncStorage.getItem("enatega-language");
+      const lng = await AsyncStorage.getItem("zego-language");
       if (lng) {
         setIsSelected(lng);
       }
@@ -40,7 +40,7 @@ export default function LanguageMain() {
   const handleSubmission = async () => {
     try {
       setIsChangingLang(true);
-      await AsyncStorage.setItem("enatega-language", isSelected);
+      await AsyncStorage.setItem("zego-language", isSelected);
       changeLanguage(isSelected);
       setIsChangingLang(false);
     } catch (e) {

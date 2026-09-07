@@ -265,7 +265,7 @@ export const ku = {
     currentLocation: 'شوێنی ئێستا',
     useCurrentLocation: 'شوێنی ئێستا بەکاربهێنە',
     locationPermissionMessage: 'کرتە بکە لەسەر ئەم پەیامە بۆ کردنەوەی ڕێکخستنەکان، پاشان مۆڵەت بدە بە ئەپەکە بۆ بەکارهێنانی شوێن لە مۆڵەتەکان.',
-    enategaUseYourLocationMessage: 'بۆ دۆزینەوەی چێشتخانەکان لە نزیکت، تەنها پێویستمان بە شوێنەکەتە',
+    zegoUseYourLocationMessage: 'بۆ دۆزینەوەی چێشتخانەکان لە نزیکت، تەنها پێویستمان بە شوێنەکەتە',
     selectAnotherLocation: 'شوێنێکی تر دیاری بکە بە دەستی',
     setLocation: 'شوێن دیاری بکە',
     cartIsEmpty: 'سەبەتە بەتاڵە',

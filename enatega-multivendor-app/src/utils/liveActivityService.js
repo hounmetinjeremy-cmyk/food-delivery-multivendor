@@ -43,12 +43,12 @@ const REMOVE_SESSION = gql`
 `
 
 const { ActivityController } = NativeModules
-const SESSION_KEY = 'enatega-live-activity-session-v2'
+const SESSION_KEY = 'zego-live-activity-session-v2'
 const RETRY_DELAYS_MS = [750, 2000, 5000]
 const defaultConfiguration = {
   appGroupId: 'group.com.enatega.multivendor.shared',
-  appScheme: 'enategamultivendor',
-  brandName: 'Enatega',
+  appScheme: 'zegomultivendor',
+  brandName: 'ZeGo',
   primaryColor: '#90E36D',
   accentColor: '#FFA921',
   logoResourceName: 'enatega_logo',

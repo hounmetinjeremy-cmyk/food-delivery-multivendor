@@ -1,6 +1,6 @@
 import NextImage, { ImageProps } from 'next/image';
 
-const DIRECT_IMAGE_HOSTS = new Set(['assets.enatega.com']);
+const DIRECT_IMAGE_HOSTS = new Set(['assets.zego.com']);
 
 function shouldBypassOptimization(src: ImageProps['src']) {
   if (typeof src !== 'string') return false;

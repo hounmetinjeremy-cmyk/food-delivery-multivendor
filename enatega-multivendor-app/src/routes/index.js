@@ -80,7 +80,7 @@ const MultiVendorProfileTab = props => (
 const linking = {
   prefixes: [
     Linking.createURL('/'),
-    'enategamultivendor://',
+    'zegomultivendor://',
     'https://multivendor.enatega.com',
     'https://www.multivendor.enatega.com'
   ],

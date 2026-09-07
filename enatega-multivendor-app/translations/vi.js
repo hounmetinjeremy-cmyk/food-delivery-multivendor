@@ -18,7 +18,7 @@ export const vi = {
     getStarted: 'Bắt đầu!',
     welcome:
       "Chào mừng đến với Yalla, đôi khi bạn chỉ cần tình yêu. Nhưng thỉnh thoảng ăn một chút cũng không hại gì.",
-    welcomeScreen: 'Chào mừng đến với Enatega',
+    welcomeScreen: 'Chào mừng đến với ZeGo',
     loginBtn: 'Đăng nhập',
     registerBtn: 'Đăng ký',
     name: 'Tên',
@@ -283,7 +283,7 @@ export const vi = {
     useCurrentLocation: 'Sử dụng vị trí hiện tại',
     locationPermissionMessage:
       'Nhấn vào tin nhắn này để mở cài đặt, sau đó cho phép ứng dụng truy cập vị trí.',
-    enategaUseYourLocationMessage:
+    zegoUseYourLocationMessage:
       'Chúng tôi chỉ cần vị trí của bạn để tìm các nhà hàng gần bạn',
     selectAnotherLocation: 'Đặt vị trí thủ công',
     setLocation: 'Đặt vị trí',
@@ -574,8 +574,8 @@ export const vi = {
     none: 'Không có',
     yourEmail: 'Đăng nhập dễ dàng bằng email của bạn!',
     yourEmailPassword: 'Bây giờ nhập mật khẩu của bạn để truy cập!',
-    brandName: 'Enatega',
-    welcomeText: 'Chào mừng đến với Enatega',
+    brandName: 'ZeGo',
+    welcomeText: 'Chào mừng đến với ZeGo',
     createAccountDesc:
       'Thưởng thức những nhà hàng tốt nhất hoặc nhận giao hàng từ các cửa hàng gần đó bất cứ thứ gì bạn muốn',
     phoneNumber: 'Số điện thoại',
@@ -634,7 +634,7 @@ export const vi = {
     Done: 'Xong',
     addMessage: 'Thêm tin nhắn',
     kindlyBeAdvisedText: 'Xin lưu ý rằng tin nhắn của bạn cũng có thể được hiển thị cho đối tác giao hàng giao đơn hàng của bạn.',
-    exploreYallaCities: 'Khám phá các thành phố Enatega',
+    exploreYallaCities: 'Khám phá các thành phố ZeGo',
     Card: 'Thẻ',
     lebelAlreadyExist: "Nhãn '{{selectedLabel}}' đã tồn tại. Vui lòng chọn một nhãn khác.",
     UpdateAvailable: 'Có bản cập nhật',

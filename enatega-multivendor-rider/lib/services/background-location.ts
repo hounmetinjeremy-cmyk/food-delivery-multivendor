@@ -62,7 +62,7 @@ const transmitLocation = async (
     authorization: `Bearer ${token}`,
     "x-platform": Platform.OS,
     "accept-language": locale,
-    "user-agent": `Enatega-Rider-App/${Platform.OS}`,
+    "user-agent": `ZeGo-Rider-App/${Platform.OS}`,
     ...(publicToken ? {"bop-auth": `Bearer ${publicToken}`} : {}),
     ...(config.nonce ? {nonce: config.nonce} : {}),
   });
@@ -93,7 +93,7 @@ const transmitLocation = async (
         "Content-Type": "application/json",
         "x-platform": Platform.OS,
         "accept-language": locale,
-        "user-agent": `Enatega-Rider-App/${Platform.OS}`,
+        "user-agent": `ZeGo-Rider-App/${Platform.OS}`,
         nonce: config.nonce,
       },
       body: JSON.stringify({
@@ -148,7 +148,7 @@ export const startBackgroundLocation = async (config: BackgroundConfig) => {
     deferredUpdatesInterval: 10000,
     showsBackgroundLocationIndicator: true,
     foregroundService: {
-      notificationTitle: "Enatega delivery tracking",
+      notificationTitle: "ZeGo delivery tracking",
       notificationBody: "Sharing your location for active deliveries",
       killServiceOnDestroy: false,
     },

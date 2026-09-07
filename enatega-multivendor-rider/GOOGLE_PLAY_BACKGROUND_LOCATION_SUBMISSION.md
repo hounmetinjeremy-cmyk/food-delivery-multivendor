@@ -1,10 +1,10 @@
 # Google Play background-location submission
 
-Use this copy for the Enatega Multivendor Rider (`com.enatega.multirider`) background-location declaration. Replace bracketed reviewer-access placeholders before submission.
+Use this copy for the ZeGo Multivendor Rider (`com.zego.multirider`) background-location declaration. Replace bracketed reviewer-access placeholders before submission.
 
 ## App purpose
 
-Enatega Multivendor Rider helps delivery riders accept assigned food-delivery orders, navigate to pickup and drop-off locations, and share delivery progress with customers and dispatchers.
+ZeGo Multivendor Rider helps delivery riders accept assigned food-delivery orders, navigate to pickup and drop-off locations, and share delivery progress with customers and dispatchers.
 
 ## Location access: one background-location feature
 
@@ -12,7 +12,7 @@ Live delivery tracking is the one feature that needs background location. After 
 
 ## Prominent in-app disclosure
 
-Enatega Multivendor Rider collects and transmits your precise location to the delivery server to enable live delivery tracking for customers and dispatchers during an active delivery, even when the app is not in use. Location sharing starts only after you accept a delivery and stops when the delivery ends or you log out.
+ZeGo Multivendor Rider collects and transmits your precise location to the delivery server to enable live delivery tracking for customers and dispatchers during an active delivery, even when the app is not in use. Location sharing starts only after you accept a delivery and stops when the delivery ends or you log out.
 
 Consent actions:
 
@@ -29,7 +29,7 @@ Record the Android build submitted to Google Play. Keep the video concise while 
 4. Tap **Allow delivery tracking**.
 5. Show the Android location permission prompt or the Android Settings page opened by the app, and grant **Allow all the time** access.
 6. Return to the active delivery screen.
-7. Put the rider app in the background and show the persistent **Enatega delivery tracking** notification.
+7. Put the rider app in the background and show the persistent **ZeGo delivery tracking** notification.
 8. Show the corresponding customer or dispatcher view receiving the rider's updated position, if available.
 9. Optionally record the **Not now** path and reopen the app during the active delivery to demonstrate that declining does not grant permission.
 
@@ -50,11 +50,11 @@ The app requires authentication and an assigned delivery to display the declared
 
 Include this sentence in the full Play Store description:
 
-> During an active delivery, Enatega Multivendor Rider can share the rider's location with customers and dispatchers even when the app is not in use, allowing them to follow delivery progress.
+> During an active delivery, ZeGo Multivendor Rider can share the rider's location with customers and dispatchers even when the app is not in use, allowing them to follow delivery progress.
 
 ## Privacy policy and Data safety
 
-Before submission, make sure the in-app and Play Console privacy-policy URL is public, non-editable, and names Enatega Multivendor Rider or the same developer entity as the store listing. The policy and Data safety form must accurately disclose:
+Before submission, make sure the in-app and Play Console privacy-policy URL is public, non-editable, and names ZeGo Multivendor Rider or the same developer entity as the store listing. The policy and Data safety form must accurately disclose:
 
 - collection and transmission of precise location;
 - collection while an active delivery continues in the background;

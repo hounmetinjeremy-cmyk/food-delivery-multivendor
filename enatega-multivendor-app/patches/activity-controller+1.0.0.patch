@@ -18,10 +18,10 @@ index 2395f46..b47ce74 100644
          <service
              android:name=".DeliveryActivityService"
              android:exported="false"
-diff --git a/node_modules/activity-controller/android/src/main/java/com/enatega/activitycontroller/ActivityUpdateReceiver.kt b/node_modules/activity-controller/android/src/main/java/com/enatega/activitycontroller/ActivityUpdateReceiver.kt
+diff --git a/node_modules/activity-controller/android/src/main/java/com/zego/activitycontroller/ActivityUpdateReceiver.kt b/node_modules/activity-controller/android/src/main/java/com/zego/activitycontroller/ActivityUpdateReceiver.kt
 index e54846d..e55d0f7 100644
---- a/node_modules/activity-controller/android/src/main/java/com/enatega/activitycontroller/ActivityUpdateReceiver.kt
-+++ b/node_modules/activity-controller/android/src/main/java/com/enatega/activitycontroller/ActivityUpdateReceiver.kt
+--- a/node_modules/activity-controller/android/src/main/java/com/zego/activitycontroller/ActivityUpdateReceiver.kt
++++ b/node_modules/activity-controller/android/src/main/java/com/zego/activitycontroller/ActivityUpdateReceiver.kt
 @@ -21,6 +21,12 @@ class ActivityUpdateReceiver : BroadcastReceiver() {
                  return
              }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /**
- * AnimatedSplash — Enatega animated splash screen (dark + light, all screen sizes)
+ * AnimatedSplash — ZeGo animated splash screen (dark + light, all screen sizes)
  *
  * A 1:1 port of the approved splash, rendered natively with Reanimated.
  * - Theme follows the system automatically (useColorScheme)

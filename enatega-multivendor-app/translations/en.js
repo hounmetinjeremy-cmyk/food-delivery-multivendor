@@ -18,7 +18,7 @@ export const en = {
   getStarted: 'Get Started!',
   welcome:
     "Welcome to Yalla, sometimes all you need is love. But a little food now and then doesn't hurt.",
-  welcomeScreen: 'Welcome to Enatega',
+  welcomeScreen: 'Welcome to ZeGo',
   loginBtn: 'Login',
   registerBtn: 'Register',
   name: 'Name',
@@ -290,7 +290,7 @@ export const en = {
   useCurrentLocation: 'Use Current Location',
   locationPermissionMessage:
     'Tap on this message to open Settings then allow app to use location from permissions.',
-  enategaUseYourLocationMessage:
+  zegoUseYourLocationMessage:
     'To find restaurants near you, we just need your location',
   selectAnotherLocation: 'Set Location Manually',
   setLocation: 'Set Location',
@@ -591,8 +591,8 @@ export const en = {
   none: 'none',
   yourEmail: 'Log in easily by entering your email!',
   yourEmailPassword: 'Please enter your passwords now for access!',
-  brandName: 'Enatega',
-  welcomeText: 'Welcome to Enatega',
+  brandName: 'ZeGo',
+  welcomeText: 'Welcome to ZeGo',
   createAccountDesc:
     'Enjoy the best restaurants or get what you need from nearby stores, delivered',
   phoneNumber: 'Phone Number',
@@ -653,7 +653,7 @@ export const en = {
   Done: 'Done',
   addMessage: 'Add Message',
   kindlyBeAdvisedText: 'Kindly be advised that your message could also be visible to the courier partner responsible for delivering your order to the venue.',
-  exploreYallaCities: 'Explore Enatega Cities',
+  exploreYallaCities: 'Explore ZeGo Cities',
   Card: 'Card',
   lebelAlreadyExist: "The label '{{selectedLabel}}' already exists. Please choose a different one.",
   UpdateAvailable: 'Update Available',

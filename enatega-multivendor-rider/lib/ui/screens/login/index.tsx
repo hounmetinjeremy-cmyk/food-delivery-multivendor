@@ -48,10 +48,10 @@ const multiVendorDemoCredentials: ILoginInitialValues = {
 const singleVendorDemoCredentials: ILoginInitialValues = {
   username:
     process.env.EXPO_PUBLIC_SINGLE_VENDOR_RIDER_DEMO_USERNAME ??
-    (__DEV__ ? "enategaRider@gmail.com" : ""),
+    (__DEV__ ? "zegoRider@gmail.com" : ""),
   password:
     process.env.EXPO_PUBLIC_SINGLE_VENDOR_RIDER_DEMO_PASSWORD ??
-    (__DEV__ ? "Enatega@123" : ""),
+    (__DEV__ ? "ZeGo@123" : ""),
 };
 
 const LoginScreen = () => {

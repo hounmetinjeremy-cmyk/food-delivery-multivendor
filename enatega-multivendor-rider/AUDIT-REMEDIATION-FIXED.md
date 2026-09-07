@@ -15,7 +15,7 @@ All changes below type-check cleanly (`tsc --noEmit` → no errors).
 |----|---------|---------------|
 | SEC-011 | Production `console.log` exposes S3 responses, license data, error payloads | Removed the S3 response / `formData` / base64 logs in the license form; wrapped the remaining sensitive logs (global error handler, auth-context logout errors, user-context subscription errors, configuration error, useDetail errors, vehicle-upload error) in `if (__DEV__)`. |
 | SEC-012 | `Math.random()` used for auth nonce (no CSPRNG) | `PublicAccessTokenService.generateNonce` now uses `crypto.getRandomValues` (polyfilled by `react-native-get-random-values`) via a new `getSecureRandomHex` helper, falling back to `Math.random` only if the secure RNG is unavailable. |
-| SEC-013 | Generic `myapp` deep-link scheme hijackable on Android | `app.config.js` `scheme` changed from `myapp` → `com.enatega.multirider` (matches the bundle id / package). |
+| SEC-013 | Generic `myapp` deep-link scheme hijackable on Android | `app.config.js` `scheme` changed from `myapp` → `com.zego.multirider` (matches the bundle id / package). |
 
 ## Performance (Medium / Low)
 

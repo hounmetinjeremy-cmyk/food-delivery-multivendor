@@ -1,17 +1,17 @@
 {
   "images": [
     {
-      "filename": "enatega-rider.png",
+      "filename": "zego-rider.png",
       "idiom": "universal",
       "scale": "1x"
     },
     {
-      "filename": "enatega-rider@2x.png",
+      "filename": "zego-rider@2x.png",
       "idiom": "universal",
       "scale": "2x"
     },
     {
-      "filename": "enatega-rider@3x.png",
+      "filename": "zego-rider@3x.png",
       "idiom": "universal",
       "scale": "3x"
     }

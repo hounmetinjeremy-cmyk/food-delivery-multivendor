@@ -13,7 +13,7 @@ import StartingImage from '@/lib/ui/useable-components/RiderandRestaurantsInfos/
 
 // images
 import WorldClassCustomers from "@/public/assets/images/png/WorldClassCustomer.webp";
-import enategaApp from "@/public/assets/images/png/enategaApp.png";
+import zegoApp from "@/public/assets/images/png/zegoApp.png";
 import growth from "@/public/assets/images/png/Growth.png";
 import getMoreOrders from "@/public/assets/images/png/GetMoreOrders.png";
 import deliverMoreCustomers from "@/public/assets/images/png/deliverToCustomer.png";
@@ -24,7 +24,7 @@ const RestInfo = () => {
 
   const cards = [
     {
-      heading: t("grow_with_Enatega"),
+      heading: t("grow_with_ZeGo"),
       text: t("access_active_customer_base"),
       image: growth,
       color: "#f7fbfe"
@@ -45,9 +45,9 @@ const RestInfo = () => {
 
   const sideCards = [
     {
-      image: enategaApp,
-      heading: t("how_Enatega_works"),
-      subHeading: t("how_Enatega_works_desc"),
+      image: zegoApp,
+      heading: t("how_ZeGo_works"),
+      subHeading: t("how_ZeGo_works_desc"),
       right: false
     },
     {
@@ -61,12 +61,12 @@ const RestInfo = () => {
   return (
     <div className='w-screen h-auto'>
       <Heading
-        heading={t("reach_more_customers_and_grow_your_business_with_Enatega")}
-        subHeading={t("partner_with_Enatega_to_create_more_sales")}
+        heading={t("reach_more_customers_and_grow_your_business_with_ZeGo")}
+        subHeading={t("partner_with_ZeGo_to_create_more_sales")}
       />
       <StartingImage image={restaurantBanner} />
       <WhyChoose
-        heading={t("why_deliver_with_Enatega")}
+        heading={t("why_deliver_with_ZeGo")}
         subHeading={t("rider_partner_earn_money_flexible_schedule")}
       />
       <WhyCardsList cards={cards} />

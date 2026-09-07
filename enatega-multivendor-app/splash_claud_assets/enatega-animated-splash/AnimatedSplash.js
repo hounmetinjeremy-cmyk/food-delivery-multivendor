@@ -1,5 +1,5 @@
 /**
- * AnimatedSplash — Enatega animated splash screen (dark + light, all screen sizes)
+ * AnimatedSplash — ZeGo animated splash screen (dark + light, all screen sizes)
  *
  * A 1:1 port of the approved splash video, rendered natively with Reanimated.
  * - Theme follows the system automatically (useColorScheme)
@@ -8,7 +8,7 @@
  *   then plays the green outro and calls `onFinish`
  *
  * Deps: react-native-reanimated (v2/v3), expo-linear-gradient — both already
- * part of the Enatega apps.
+ * part of the ZeGo apps.
  *
  * Usage (App.js):
  *   const [appReady, setAppReady] = useState(false)

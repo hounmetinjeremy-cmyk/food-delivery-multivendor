@@ -277,7 +277,7 @@ secureAccountWithPhone: 'سنستخدم رقمك فقط إذا كنا بحاجة
   useCurrentLocation: 'استخدم الموقع الحالي',
   locationPermissionMessage:
     'اضغط على هذه الرسالة لفتح الإعدادات ثم اسمح للتطبيق باستخدام الموقع من الصلاحيات.',
-  enategaUseYourLocationMessage:
+  zegoUseYourLocationMessage:
     'تستخدم إناتيغا موقعك لعرض المطاعم القريبة منك!',
   selectAnotherLocation: 'حدد موقعًا آخر',
   setLocation: 'تعيين الموقع',

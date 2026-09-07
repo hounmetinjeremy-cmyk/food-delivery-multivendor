@@ -266,7 +266,7 @@ export const ps = {
     currentLocation: 'اوسنی ځای',
     useCurrentLocation: 'اوسنی ځای وکاروئ',
     locationPermissionMessage: 'په دې پیغام باندې کلیک وکړئ ترڅو ترتیبات خلاص کړئ بیا اپلیکیشن ته اجازه ورکړئ چې د اجازې څخه ځای وکاروي.',
-    enategaUseYourLocationMessage: 'د نږدې رستورانتونو موندلو لپاره، موږ یوازې ستاسو ځای ته اړتیا لرو',
+    zegoUseYourLocationMessage: 'د نږدې رستورانتونو موندلو لپاره، موږ یوازې ستاسو ځای ته اړتیا لرو',
     selectAnotherLocation: 'ځای په لاسي توګه تنظیم کړئ',
     setLocation: 'ځای تنظیم کړئ',
     cartIsEmpty: 'کارټ خالي دی',

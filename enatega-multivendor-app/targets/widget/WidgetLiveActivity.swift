@@ -2,14 +2,14 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-private let enategaGreen = Color(red: 0.56, green: 0.89, blue: 0.43)
-private let enategaAccent = Color(red: 1.0, green: 0.66, blue: 0.13)
-private let enategaNavy = Color(red: 0.04, green: 0.07, blue: 0.15)
+private let zegoGreen = Color(red: 0.56, green: 0.89, blue: 0.43)
+private let zegoAccent = Color(red: 1.0, green: 0.66, blue: 0.13)
+private let zegoNavy = Color(red: 0.04, green: 0.07, blue: 0.15)
 private let muted = Color(red: 0.43, green: 0.44, blue: 0.47)
 
 private func trackingURL(orderId: String, courierChat: Bool = false) -> URL? {
   var components = URLComponents()
-  components.scheme = "enategamultivendor"
+  components.scheme = "zegomultivendor"
   components.host = "order-tracking"
   components.queryItems = [URLQueryItem(name: "id", value: orderId)]
   if courierChat {
@@ -23,7 +23,7 @@ private func riderCallURL(phone: String) -> URL? {
   guard !trimmedPhone.isEmpty else { return nil }
 
   var components = URLComponents()
-  components.scheme = "enategamultivendor"
+  components.scheme = "zegomultivendor"
   components.host = "call-rider"
   components.queryItems = [URLQueryItem(name: "phone", value: trimmedPhone)]
   return components.url
@@ -96,16 +96,16 @@ private extension DeliveryAttributes.ContentState {
   }
 }
 
-private struct EnategaLogo: View {
+private struct ZeGoLogo: View {
   var compact = false
 
   var body: some View {
-    Image("EnategaLogo")
+    Image("ZeGoLogo")
       .resizable()
       .scaledToFill()
       .frame(width: compact ? 76 : 112, height: compact ? 24 : 32, alignment: .leading)
       .clipped()
-      .accessibilityLabel("Enatega")
+      .accessibilityLabel("ZeGo")
   }
 }
 
@@ -144,7 +144,7 @@ private struct EtaView: View {
                 .stroke(muted.opacity(0.5), lineWidth: 4)
               Circle()
                 .trim(from: 0, to: remainingProgress(until: arrival, at: timeline.date))
-                .stroke(enategaAccent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(zegoAccent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             }
             .frame(width: 27, height: 27)
@@ -162,9 +162,9 @@ private struct StageTimeline: View {
 
   private func color(for stage: DeliveryStage) -> Color {
     if state.isCancelled { return muted }
-    if state.stage == .delivered { return enategaGreen }
-    if stage.rawValue < state.stage.rawValue { return enategaGreen }
-    if stage == state.stage { return enategaAccent }
+    if state.stage == .delivered { return zegoGreen }
+    if stage.rawValue < state.stage.rawValue { return zegoGreen }
+    if stage == state.stage { return zegoAccent }
     return muted
   }
 
@@ -184,7 +184,7 @@ private struct StageTimeline: View {
             .offset(x: railInset, y: (circleSize / 2) - 1)
           if !state.isCancelled && state.stage.rawValue > 0 {
             Capsule()
-              .fill(enategaGreen)
+              .fill(zegoGreen)
               .frame(
                 width: railWidth * CGFloat(state.stage.rawValue) / CGFloat(DeliveryStage.allCases.count - 1),
                 height: compact ? 2 : 3
@@ -197,11 +197,11 @@ private struct StageTimeline: View {
             let stage = item.element
             ZStack {
               Circle()
-                .fill(enategaNavy)
+                .fill(zegoNavy)
               Circle()
                 .stroke(color(for: stage), lineWidth: stage == state.stage ? 3 : 2)
               if stage.rawValue < state.stage.rawValue && !state.isCancelled {
-                Circle().fill(enategaGreen)
+                Circle().fill(zegoGreen)
               }
               Image(systemName: stage.rawValue < state.stage.rawValue ? "checkmark" : stage.icon)
                 .font(.system(size: iconSize, weight: .bold))
@@ -243,7 +243,7 @@ private struct RiderPanel: View {
   var body: some View {
     if state.hasRider {
       HStack(spacing: 8) {
-        Image("EnategaRider")
+        Image("ZeGoRider")
           .renderingMode(.original)
           .resizable()
           .scaledToFit()
@@ -291,7 +291,7 @@ private struct LockScreenActivityView: View {
     let state = context.state
     VStack(spacing: state.hasRider ? 7 : 11) {
       HStack {
-        EnategaLogo()
+        ZeGoLogo()
         Spacer()
         if state.showsETA {
           EtaView(state: state)
@@ -313,7 +313,7 @@ private struct LockScreenActivityView: View {
     .padding(.top, 9)
     .padding(.bottom, 12)
     .foregroundStyle(.white)
-    .activityBackgroundTint(enategaNavy)
+    .activityBackgroundTint(zegoNavy)
     .activitySystemActionForegroundColor(.white)
     .widgetURL(trackingURL(orderId: context.attributes.orderId))
   }
@@ -326,7 +326,7 @@ struct WidgetLiveActivity: Widget {
     } dynamicIsland: { context in
       let state = context.state
       return DynamicIsland {
-        DynamicIslandExpandedRegion(.leading) { EnategaLogo(compact: true) }
+        DynamicIslandExpandedRegion(.leading) { ZeGoLogo(compact: true) }
         DynamicIslandExpandedRegion(.trailing) {
           if state.showsETA {
             EtaView(state: state, compact: true)
@@ -346,17 +346,17 @@ struct WidgetLiveActivity: Widget {
           }.padding(.top, 4)
         }
       } compactLeading: {
-        Image(systemName: "paperplane.fill").foregroundStyle(state.isCancelled ? .red : enategaGreen)
+        Image(systemName: "paperplane.fill").foregroundStyle(state.isCancelled ? .red : zegoGreen)
       } compactTrailing: {
         if state.showsETA {
           EtaView(state: state, compact: true)
         } else {
-          Image(systemName: state.stage.icon).foregroundStyle(state.isCancelled ? .red : enategaAccent)
+          Image(systemName: state.stage.icon).foregroundStyle(state.isCancelled ? .red : zegoAccent)
         }
       } minimal: {
-        Image(systemName: "paperplane.fill").foregroundStyle(state.isCancelled ? .red : enategaGreen)
+        Image(systemName: "paperplane.fill").foregroundStyle(state.isCancelled ? .red : zegoGreen)
       }
-      .keylineTint(enategaGreen)
+      .keylineTint(zegoGreen)
       .widgetURL(trackingURL(orderId: context.attributes.orderId))
     }
   }

@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { isAppMode } from './constants'
 
-const ORIGINS_KEY = '@enatega/known-order-origins'
-const PENDING_KEY = '@enatega/pending-order-navigation'
+const ORIGINS_KEY = '@zego/known-order-origins'
+const PENDING_KEY = '@zego/pending-order-navigation'
 const MAX_SAVED_ORDERS = 250
 
 const normalizeOrderId = value => {

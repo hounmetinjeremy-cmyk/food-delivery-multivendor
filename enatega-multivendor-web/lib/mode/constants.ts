@@ -6,7 +6,7 @@ export const APP_MODES = {
 export type AppMode = (typeof APP_MODES)[keyof typeof APP_MODES];
 
 export const DEFAULT_APP_MODE: AppMode = APP_MODES.MULTI;
-export const APP_MODE_STORAGE_KEY = "@enatega/app-mode";
+export const APP_MODE_STORAGE_KEY = "@zego/app-mode";
 
 export const getForcedAppMode = (): AppMode | null => {
   const policy = process.env.NEXT_PUBLIC_VENDOR_MODE?.toUpperCase();

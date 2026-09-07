@@ -8,7 +8,7 @@ export function setupFirebase(firebaseConfig) {
   const key = firebaseConfig.projectId || "default";
   let firebaseApp = firebaseApps.get(key);
   if (!firebaseApp) {
-    const name = `enatega-${key}`;
+    const name = `zego-${key}`;
     firebaseApp = getApps().find((app) => app.name === name) || initializeApp(firebaseConfig, name);
     firebaseApps.set(key, firebaseApp);
   }

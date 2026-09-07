@@ -277,7 +277,7 @@ secureAccountWithPhone: 'យើងនឹងប្រើលេខរៀងគ្�
   useCurrentLocation: 'ប្រើទីតាំងបច្ចុប្បន្ន',
   locationPermissionMessage:
     'ចុចលើសារនេះដើម្បីបើកការកំណត់ប្រើទីតាំងរបស់អ្នក បន្ទាប់ពីនោះអនុញ្ញាតឱ្យកម្មវិធីប្រើទីតាំង។',
-  enategaUseYourLocationMessage:
+  zegoUseYourLocationMessage:
     'Yalla ប្រើទីតាំងរបស់អ្នកដើម្បីបង្ហាញរបាយទីតាំងដែលនៅជិតអ្នក!',
   selectAnotherLocation: 'ជ្រើសរើសទីតាំងផ្សេងៗ',
   setLocation: 'កំណត់ទីតាំង',

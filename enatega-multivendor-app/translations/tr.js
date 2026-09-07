@@ -18,7 +18,7 @@ export const tr = {
     getStarted: 'Başla!',
     welcome:
       "Yalla'ya hoş geldiniz, bazen tek ihtiyacınız olan sevgidir. Ama arada bir yemek de zarar vermez.",
-    welcomeScreen: 'Enatega’ya Hoş Geldiniz',
+    welcomeScreen: 'ZeGo’ya Hoş Geldiniz',
     loginBtn: 'Giriş Yap',
     registerBtn: 'Kayıt Ol',
     name: 'İsim',
@@ -283,7 +283,7 @@ export const tr = {
     useCurrentLocation: 'Mevcut Konumu Kullan',
     locationPermissionMessage:
       'Ayarları açmak için bu mesaja dokunun, ardından uygulamaya konum izni verin.',
-    enategaUseYourLocationMessage:
+    zegoUseYourLocationMessage:
       'Yakınınızdaki restoranları bulmak için sadece konumunuza ihtiyacımız var',
     selectAnotherLocation: 'Konumu Manuel Olarak Belirle',
     setLocation: 'Konumu Belirle',
@@ -574,8 +574,8 @@ export const tr = {
     none: 'yok',
     yourEmail: 'E-postanızı girerek kolayca giriş yapın!',
     yourEmailPassword: 'Erişim için şimdi şifrelerinizi girin!',
-    brandName: 'Enatega',
-    welcomeText: 'Enatega’ya Hoş Geldiniz',
+    brandName: 'ZeGo',
+    welcomeText: 'ZeGo’ya Hoş Geldiniz',
     createAccountDesc:
       'En iyi restoranların keyfini çıkarın veya yakınınızdaki mağazalardan ihtiyacınız olanı teslim alın',
     phoneNumber: 'Telefon Numarası',
@@ -634,7 +634,7 @@ export const tr = {
     Done: 'Tamam',
     addMessage: 'Mesaj Ekle',
     kindlyBeAdvisedText: 'Mesajınızın, siparişinizi mekana teslim edecek kurye ortağına da göründüğünü lütfen unutmayın.',
-    exploreYallaCities: 'Enatega Şehirlerini Keşfet',
+    exploreYallaCities: 'ZeGo Şehirlerini Keşfet',
     Card: 'Kart',
     lebelAlreadyExist: "'{{selectedLabel}}' etiketi zaten mevcut. Lütfen farklı bir tane seçin.",
     UpdateAvailable: 'Güncelleme Mevcut',

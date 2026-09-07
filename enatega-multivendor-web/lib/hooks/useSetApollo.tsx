@@ -178,7 +178,7 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
       typeof window === "undefined"
         ? ""
         : localStorage.getItem(
-            `@enatega/${operationMode.toLowerCase()}/userId`,
+            `@zego/${operationMode.toLowerCase()}/userId`,
           );
     const operationName = operation.operationName;
     if (

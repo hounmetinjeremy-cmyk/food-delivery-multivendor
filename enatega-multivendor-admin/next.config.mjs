@@ -48,7 +48,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'enatega-backend.s3.eu-north-1.amazonaws.com',
+        hostname: 'zego-backend.s3.eu-north-1.amazonaws.com',
       },
       {
         protocol: 'https',
@@ -56,7 +56,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'assets.enatega.com',
+        hostname: 'assets.zego.com',
       }
     ], // Add placehold.co as an allowed domain
   },

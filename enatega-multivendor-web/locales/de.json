@@ -50,10 +50,10 @@
       "locationError": "Wir konnten nicht auf deinen Standort zugreifen. Suche stattdessen nach einer Stadt."
     },
     "journey": {
-      "eyebrow": "So bewegt sich Enatega",
+      "eyebrow": "So bewegt sich ZeGo",
       "title": "Von deiner Stadt",
       "accent": "vor deine Haustür.",
-      "bagAlt": "Enatega Liefertasche",
+      "bagAlt": "ZeGo Liefertasche",
       "stages": {
         "choose": {
           "title": "Wählen",
@@ -70,16 +70,16 @@
       }
     },
     "cta": {
-      "label": "Arbeiten Sie mit Enatega",
+      "label": "Arbeiten Sie mit ZeGo",
       "business": {
         "eyebrow": "Für Unternehmen",
-        "title": "Wachsen Sie mit Enatega.",
+        "title": "Wachsen Sie mit ZeGo.",
         "body": "Bringen Sie Ihr Geschäft mehr Kunden näher.",
         "action": "Partner werden"
       },
       "rider": {
         "eyebrow": "Für Fahrgäste",
-        "title": "Fahre mit Enatega.",
+        "title": "Fahre mit ZeGo.",
         "body": "Liefere nach deinem Zeitplan.",
         "action": "Fahrgast werden"
       }

@@ -60,8 +60,8 @@ const LanguageSelection = () => {
 
   const handleLanguageSelect = async (languageCode, languageName) => {
     setSelectedLanguage(languageCode)
-    await AsyncStorage.setItem('enatega-language', languageCode)
-    await AsyncStorage.setItem('enatega-language-name', languageName)
+    await AsyncStorage.setItem('zego-language', languageCode)
+    await AsyncStorage.setItem('zego-language-name', languageName)
     i18n.changeLanguage(languageCode)
   }
 

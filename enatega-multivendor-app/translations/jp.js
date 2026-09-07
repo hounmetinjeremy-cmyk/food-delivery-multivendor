@@ -265,7 +265,7 @@ export const jp = {
     currentLocation: '現在地',
     useCurrentLocation: '現在地を使用',
     locationPermissionMessage: '設定を開いて、アプリが場所を使用することを許可するには、このメッセージをタップしてください。',
-    enategaUseYourLocationMessage: '近くのレストランを見つけるには、場所が必要です',
+    zegoUseYourLocationMessage: '近くのレストランを見つけるには、場所が必要です',
     selectAnotherLocation: '場所を手動で設定',
     setLocation: '場所を設定',
     cartIsEmpty: 'カートは空です',

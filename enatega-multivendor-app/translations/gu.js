@@ -283,7 +283,7 @@ export const gu = {
     useCurrentLocation: 'વર્તમાન સ્થાનનો ઉપયોગ કરો',
     locationPermissionMessage:
       'સેટિંગ્સ ખોલવા માટે આ સંદેશ પર ટેપ કરો, પછી એપ્લિકેશનને સ્થાન પ્રવેશની મંજૂરી આપો.',
-    enategaUseYourLocationMessage:
+    zegoUseYourLocationMessage:
       'અમને તમારા નજીકના રેસ્ટોરન્ટ્સ શોધવા માટે ફક્ત તમારા સ્થાનની જરૂર છે',
     selectAnotherLocation: 'સ્થાન હસ્તે સેટ કરો',
     setLocation: 'સ્થાન સેટ કરો',

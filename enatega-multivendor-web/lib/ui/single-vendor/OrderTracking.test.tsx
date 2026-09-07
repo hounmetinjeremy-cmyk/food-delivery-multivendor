@@ -39,7 +39,7 @@ vi.mock("@apollo/client", async () => {
                 paymentMethod: "COD",
                 restaurant: {
                   _id: "store-id",
-                  name: "Enatega Store",
+                  name: "ZeGo Store",
                   location: { coordinates: [74.3, 31.5] },
                 },
                 deliveryAddress: {
