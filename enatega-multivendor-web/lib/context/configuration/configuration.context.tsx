@@ -38,7 +38,18 @@ export const ConfigurationProvider = ({
     sharedConfigurationQuery.loading ||
     sharedConfigurationQuery.error ||
     !sharedConfigurationQuery.data?.configuration
-      ? { currency: "", currencySymbol: "", deliveryRate: 0, costType: "perKM" }
+      ? {
+          currency: "",
+          currencySymbol: "",
+          deliveryRate: 0,
+          costType: "perKM",
+          // While the configuration query is still loading (e.g. right as
+          // someone taps Google sign-in on first load), don't block them on
+          // phone/email verification steps the backend hasn't had a chance
+          // to explicitly turn off yet.
+          skipEmailVerification: true,
+          skipMobileVerification: true,
+        }
       : sharedConfigurationQuery.data.configuration;
   const commerceConfiguration = isSingleVendor
     ? singleVendorConfigurationQuery.data?.configuration || sharedConfiguration
