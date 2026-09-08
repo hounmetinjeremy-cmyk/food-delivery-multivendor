@@ -14,6 +14,10 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
     { label: t("profileDefaultTabs.tab4"), path: "/profile/settings" },
     { label: t("profileDefaultTabs.tab5"), path: "/profile/getHelp" },
     { label: t("profileDefaultTabs.tab6"), path: "/profile/customerTicket" },
+    // Reuses the fork's existing partner-signup pages as-is (same forms,
+    // same content) — just surfaced from the Profile hub as requested.
+    { label: "Devenir vendeur / fournisseur", path: "/restaurantInfo" },
+    { label: "Devenir livreur", path: "/rider" },
   ];
   return isSingleVendor ? [
     ...base.slice(0, 3),
