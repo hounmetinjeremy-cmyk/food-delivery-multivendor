@@ -1247,20 +1247,54 @@ export const catalogResolvers = {
       const passwordHash = input.password
         ? await hashPassword(input.password)
         : null
+      const email = input.email.toLowerCase()
+      const name = [input.firstName, input.lastName].filter(Boolean).join(' ')
+
+      // Riders have no separate onboarding dashboard yet, so self-registration
+      // activates them immediately (visible in the Livreur list right away)
+      // instead of sitting in partner_requests waiting for a review step that
+      // doesn't exist. Vendors still go through the admin app's own sign-up.
+      const isAutoActivatedRider = input.requestType === 'rider'
+
       await ctx.env.DB.prepare(
-        `INSERT INTO partner_requests (id, request_type, first_name, last_name, email, phone, password_hash)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO partner_requests (id, request_type, first_name, last_name, email, phone, password_hash, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       )
         .bind(
           newId(),
           input.requestType,
           input.firstName,
           input.lastName,
-          input.email.toLowerCase(),
+          email,
           input.phone ?? null,
-          passwordHash
+          passwordHash,
+          isAutoActivatedRider ? 'approved' : 'pending'
         )
         .run()
+
+      if (isAutoActivatedRider) {
+        const userId = newId()
+        await ctx.env.DB.prepare(
+          `INSERT INTO users (id, email, phone, password_hash, name, first_name, last_name, role)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'rider')`
+        )
+          .bind(
+            userId,
+            email,
+            input.phone ?? null,
+            passwordHash,
+            name,
+            input.firstName,
+            input.lastName
+          )
+          .run()
+        await ctx.env.DB.prepare(
+          `INSERT INTO rider_profiles (user_id, is_available) VALUES (?, 1)`
+        )
+          .bind(userId)
+          .run()
+      }
+
       return true
     },
 
