@@ -39,3 +39,8 @@ yarn-error.log*
 next-env.d.ts
 
 *storybook.log
+
+# Cloudflare (opennextjs-cloudflare)
+.open-next
+.wrangler
+.dev.vars
