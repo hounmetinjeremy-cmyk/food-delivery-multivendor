@@ -40,6 +40,7 @@ import { onUseLocalStorage } from '@/lib/utils/methods';
 import { setAuthTokens } from '@/lib/utils/methods/auth';
 import { SignInSchema } from '@/lib/utils/schema';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useUserContext } from '@/lib/hooks/useUser';
 import { DEFAULT_ROUTES } from '@/lib/utils/constants/routes';
 
@@ -223,6 +224,16 @@ export default function LoginEmailPasswordMain() {
                   );
                 }}
               </Formik>
+            </div>
+
+            <div className="text-center text-sm text-[#667085] dark:text-white">
+              Pas encore de compte ?{' '}
+              <Link
+                href="/authentication/sign-up"
+                className="font-semibold text-primary-color hover:underline"
+              >
+                Créer un compte vendeur
+              </Link>
             </div>
           </div>
         </Card>

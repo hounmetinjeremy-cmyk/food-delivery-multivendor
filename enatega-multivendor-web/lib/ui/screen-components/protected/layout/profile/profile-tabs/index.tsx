@@ -1,21 +1,29 @@
 "use client"
 
-import { CSSProperties, useEffect, useRef } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { IProfileTabsProps, ITabItem } from "@/lib/utils/interfaces";
 import { TabItem } from "@/lib/ui/useable-components/profile-tabs";
 import { useProfileDefaultTabs } from "@/lib/utils/constants";
+import RiderSignupModal from "@/lib/ui/useable-components/rider-signup-modal";
+
+const BECOME_RIDER_PATH = "#become-rider";
 
 export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { tabs?: ITabItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+  const [isRiderModalVisible, setIsRiderModalVisible] = useState(false);
+
   // Use the passed tabs or default to profileDefaultTabs
   const defaultTabs = useProfileDefaultTabs();
   const tabsToRender: ITabItem[] = tabs ?? defaultTabs; // ✅ safe fallback
 
   const goToTab = (path: string) => {
+    if (path === BECOME_RIDER_PATH) {
+      setIsRiderModalVisible(true);
+      return;
+    }
     if (path.startsWith("http")) {
       window.open(path, "_blank", "noopener,noreferrer");
       return;
@@ -84,11 +92,16 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
             key={tab.path}
             tab={tab}
             isActive={pathname === tab.path}
-            onClick={() => router.push(tab.path)}
+            onClick={() => goToTab(tab.path)}
             className="py-1 px-1 text-lg font-medium dark:text-gray-300"
           />
         ))}
       </div>
+
+      <RiderSignupModal
+        visible={isRiderModalVisible}
+        onHide={() => setIsRiderModalVisible(false)}
+      />
     </div>
   );
 }

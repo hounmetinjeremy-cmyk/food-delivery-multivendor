@@ -37,6 +37,7 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 // Hooks
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/lib/hooks/useUser';
+import Link from 'next/link';
 
 const SIGN_UP_VENDOR = gql`
   mutation SignUpVendor($vendorInput: VendorInput) {
@@ -312,6 +313,16 @@ export default function SignupMain() {
                   );
                 }}
               </Formik>
+            </div>
+
+            <div className="text-center text-sm text-gray-400">
+              Déjà un compte ?{' '}
+              <Link
+                href="/authentication"
+                className="font-semibold text-primary-color hover:underline"
+              >
+                Se connecter
+              </Link>
             </div>
           </div>
         </Card>

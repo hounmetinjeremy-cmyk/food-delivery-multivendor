@@ -14,16 +14,16 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
     { label: t("profileDefaultTabs.tab4"), path: "/profile/settings" },
     { label: t("profileDefaultTabs.tab5"), path: "/profile/getHelp" },
     { label: t("profileDefaultTabs.tab6"), path: "/profile/customerTicket" },
-    // Reuses the fork's existing partner-signup pages as-is (same forms,
-    // same content) — just surfaced from the Profile hub as requested.
-    { label: "Devenir vendeur / fournisseur", path: "/restaurantInfo" },
-    { label: "Devenir livreur", path: "/rider" },
+    // One click each: register (or open the dashboard if already registered)
+    // — no marketing page in between. "#become-rider" is a sentinel path
+    // handled by ProfileTabs to open a quick signup modal instead of routing.
     {
-      label: "Tableau de bord vendeur / gérant",
+      label: "Devenir vendeur / Tableau de bord",
       path:
         process.env.NEXT_PUBLIC_ADMIN_URL ??
         "https://zego-admin.hounmetinjeremy.workers.dev",
     },
+    { label: "Devenir livreur", path: "#become-rider" },
   ];
   return isSingleVendor ? [
     ...base.slice(0, 3),
