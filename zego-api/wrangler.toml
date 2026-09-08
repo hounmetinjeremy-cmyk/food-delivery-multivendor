@@ -19,4 +19,4 @@ bucket_name = "zego-uploads"
 ENVIRONMENT = "development"
 # Google OAuth client IDs allowed to sign in (comma-separated: web, iOS, Android
 # client IDs all share one Google Sign-In flow). Not secret — safe as a var.
-GOOGLE_CLIENT_IDS = "545417768480-4l1rmpk3iq7jcsga2bi8jk0o6d1uqq6p.apps.googleusercontent.com"
+GOOGLE_CLIENT_IDS = "545417768480-qp2qi2psh0862m67oqsj1ules76jhqsf.apps.googleusercontent.com,545417768480-4l1rmpk3iq7jcsga2bi8jk0o6d1uqq6p.apps.googleusercontent.com"
