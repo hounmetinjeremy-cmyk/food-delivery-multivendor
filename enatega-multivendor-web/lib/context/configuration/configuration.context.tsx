@@ -44,7 +44,13 @@ export const ConfigurationProvider = ({
     ? singleVendorConfigurationQuery.data?.configuration || sharedConfiguration
     : sharedConfiguration;
 
-  const configuredGoogleClientId = sharedConfiguration.webClientID;
+  // Falls back to our own Google client ID when the configured backend
+  // doesn't return one yet (e.g. it isn't reachable), so Google sign-in
+  // still works instead of surfacing "Social login is not configured".
+  const configuredGoogleClientId =
+    sharedConfiguration.webClientID ??
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ??
+    "545417768480-4l1rmpk3iq7jcsga2bi8jk0o6d1uqq6p.apps.googleusercontent.com";
   const GOOGLE_CLIENT_ID = GOOGLE_WEB_CLIENT_ID_REGEX.test(
     configuredGoogleClientId ?? "",
   )
