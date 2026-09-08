@@ -52,6 +52,7 @@ const Rider = () => {
       <EmailForm
         heading={t("zego_rider_page_name_form_heading")}
         role={t("zego_rider_page_name_form_role")}
+        requestType="rider"
       />
     </div>
   );

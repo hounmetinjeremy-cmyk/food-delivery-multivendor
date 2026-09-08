@@ -11,8 +11,8 @@ import { Button } from "primereact/button";
 
 // libraries and utils
 import { useRouter } from "next/navigation";
-import { sendEmail } from "@/lib/utils/methods";
 import "react-phone-input-2/lib/style.css";
+import { zegoApiFetch } from "@/lib/zego-api/client";
 
 // interfcaes
 import { VendorFormValues } from "@/lib/utils/interfaces/Rider-restaurant.interface";
@@ -30,7 +30,14 @@ import { useTranslations } from "next-intl";
 interface formProps {
   heading: string;
   role: string;
+  requestType: "rider" | "vendor";
 }
+
+const SUBMIT_PARTNER_REQUEST_MUTATION = /* GraphQL */ `
+  mutation SubmitPartnerRequest($input: PartnerRequestInput!) {
+    submitPartnerRequest(input: $input)
+  }
+`;
 
 const initialValues: VendorFormValues = {
   firstName: "",
@@ -42,20 +49,23 @@ const initialValues: VendorFormValues = {
   termsAccepted: false,
 };
 
-const EmailForm: React.FC<formProps> = ({ heading, role }) => {
+const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
   const { showToast } = useToast();
   const router = useRouter();
   const t = useTranslations();
 
   const handleSubmit = async (formData: VendorFormValues) => {
-    const templateParams = {
-      ...formData,
-      role: role,
-      isRider: false,
-    };
-
     try {
-      await sendEmail("template_eogfh2k", templateParams);
+      await zegoApiFetch(SUBMIT_PARTNER_REQUEST_MUTATION, {
+        input: {
+          requestType,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phoneNumber,
+          password: formData.password,
+        },
+      });
 
       showToast({
         type: "success",
@@ -66,7 +76,7 @@ const EmailForm: React.FC<formProps> = ({ heading, role }) => {
 
       router.push("/");
     } catch (error) {
-      console.error("Failed to send email:", error);
+      console.error(`Failed to submit ${role} request:`, error);
 
       showToast({
         type: "error",

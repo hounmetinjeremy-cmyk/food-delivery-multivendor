@@ -413,6 +413,8 @@ export const catalogTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
+    submitPartnerRequest(input: PartnerRequestInput!): Boolean!
+
     createVendor(vendorInput: VendorInput): Vendor!
     editVendor(vendorInput: VendorInput): Vendor!
     deleteVendor(id: String!): Boolean!
@@ -464,6 +466,15 @@ export const catalogTypeDefs = /* GraphQL */ `
     firstName: String
     lastName: String
     phoneNumber: String
+  }
+
+  input PartnerRequestInput {
+    requestType: String!
+    firstName: String!
+    lastName: String!
+    email: String!
+    phone: String
+    password: String
   }
 
   input VendorInput {
@@ -1214,6 +1225,44 @@ export const catalogResolvers = {
   },
 
   Mutation: {
+    submitPartnerRequest: async (
+      _p: unknown,
+      args: {
+        input: {
+          requestType: string
+          firstName: string
+          lastName: string
+          email: string
+          phone?: string
+          password?: string
+        }
+      },
+      ctx: GraphQLContext
+    ) => {
+      const { input } = args
+      if (input.requestType !== 'rider' && input.requestType !== 'vendor') {
+        throw new Error('requestType must be "rider" or "vendor"')
+      }
+      const passwordHash = input.password
+        ? await hashPassword(input.password)
+        : null
+      await ctx.env.DB.prepare(
+        `INSERT INTO partner_requests (id, request_type, first_name, last_name, email, phone, password_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+        .bind(
+          newId(),
+          input.requestType,
+          input.firstName,
+          input.lastName,
+          input.email.toLowerCase(),
+          input.phone ?? null,
+          passwordHash
+        )
+        .run()
+      return true
+    },
+
     createVendor: async (
       _p: unknown,
       args: { vendorInput: Record<string, unknown> },

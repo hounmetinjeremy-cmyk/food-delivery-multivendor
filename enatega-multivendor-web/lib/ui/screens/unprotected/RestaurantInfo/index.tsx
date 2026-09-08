@@ -75,6 +75,7 @@ const RestInfo = () => {
       <EmailForm
         heading={t("become_a_restaurant")}
         role={t("vendor_registration")}
+        requestType="vendor"
       />
     </div>
   );
