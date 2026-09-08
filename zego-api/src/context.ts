@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql'
 import { verifyJWT, type JwtPayload } from './auth'
 
 export interface Env {
@@ -24,9 +25,11 @@ export async function createContext(request: Request, env: Env): Promise<GraphQL
   return { env, request, user }
 }
 
-export class AuthError extends Error {
+export class AuthError extends GraphQLError {
   constructor(message = 'Unauthorized') {
-    super(message)
+    super(message, {
+      extensions: { code: message === 'Forbidden' ? 'FORBIDDEN' : 'UNAUTHENTICATED' }
+    })
     this.name = 'AuthError'
   }
 }

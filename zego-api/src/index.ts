@@ -1,18 +1,6 @@
-import { createYoga, createSchema } from 'graphql-yoga'
+import { createYoga } from 'graphql-yoga'
 import { createContext, type Env, type GraphQLContext } from './context'
-
-const schema = createSchema<GraphQLContext>({
-  typeDefs: /* GraphQL */ `
-    type Query {
-      health: String!
-    }
-  `,
-  resolvers: {
-    Query: {
-      health: () => 'ok'
-    }
-  }
-})
+import { schema } from './schema'
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -20,7 +8,11 @@ export default {
       schema,
       graphqlEndpoint: '/graphql',
       context: () => createContext(request, env),
-      landingPage: env.ENVIRONMENT !== 'production'
+      landingPage: env.ENVIRONMENT !== 'production',
+      cors: {
+        origin: '*',
+        methods: ['POST', 'OPTIONS']
+      }
     })
     return yoga.fetch(request)
   }
