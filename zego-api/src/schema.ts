@@ -91,6 +91,11 @@ export const schema = createSchema<GraphQLContext>({
       ): LoginProfile!
       startConversation(withUserId: ID!): Conversation!
       sendMessage(conversationId: ID!, body: String!): Message!
+      uploadImageToS3(image: String!): UploadedImage!
+    }
+
+    type UploadedImage {
+      imageUrl: String!
     }
 
     type Rider {
@@ -512,6 +517,28 @@ export const schema = createSchema<GraphQLContext>({
           body: saved!.body,
           createdAt: saved!.created_at
         }
+      },
+
+      uploadImageToS3: async (_parent, args: { image: string }, ctx) => {
+        requireUser(ctx)
+        const match = args.image.match(/^data:(.+?);base64,(.+)$/)
+        if (!match) {
+          throw new Error('image must be a base64 data URL')
+        }
+        const [, contentType, base64Data] = match
+        const bytes = Uint8Array.from(atob(base64Data), (c) =>
+          c.charCodeAt(0)
+        )
+        if (bytes.byteLength > 10 * 1024 * 1024) {
+          throw new Error('Image too large (max 10MB)')
+        }
+        const extension = contentType.split('/')[1] ?? 'bin'
+        const key = `${crypto.randomUUID()}.${extension}`
+        await ctx.env.UPLOADS.put(key, bytes, {
+          httpMetadata: { contentType }
+        })
+        const origin = new URL(ctx.request.url).origin
+        return { imageUrl: `${origin}/uploads/${key}` }
       }
     }
   }
