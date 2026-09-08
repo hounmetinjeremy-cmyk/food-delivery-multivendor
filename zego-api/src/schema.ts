@@ -1,7 +1,8 @@
 import { createSchema } from 'graphql-yoga'
-import { signJWT, verifyPassword } from './auth'
+import { signJWT, verifyJWT, verifyPassword } from './auth'
 import { verifyGoogleIdToken } from './google'
 import { AuthError, requireUser, type GraphQLContext } from './context'
+import { catalogTypeDefs, catalogResolvers } from './catalog'
 
 function newId(): string {
   return crypto.randomUUID()
@@ -68,7 +69,8 @@ async function upsertGoogleUser(
 }
 
 export const schema = createSchema<GraphQLContext>({
-  typeDefs: /* GraphQL */ `
+  typeDefs: [
+    /* GraphQL */ `
     type Query {
       health: String!
       configuration: Configuration!
@@ -92,6 +94,39 @@ export const schema = createSchema<GraphQLContext>({
       startConversation(withUserId: ID!): Conversation!
       sendMessage(conversationId: ID!, body: String!): Message!
       uploadImageToS3(image: String!): UploadedImage!
+      ownerLogin(email: String!, password: String!): OwnerLoginPayload!
+      refreshToken(refreshToken: String!, userType: String!): RefreshPayload!
+    }
+
+    type OwnerLoginPayload {
+      userId: ID!
+      token: String!
+      tokenExpiration: String
+      refreshToken: String!
+      refreshTokenExpiration: String
+      email: String
+      userType: String!
+      restaurants: [OwnerRestaurantSummary!]!
+      permissions: [String!]!
+      userTypeId: String
+      image: String
+      name: String
+    }
+
+    type OwnerRestaurantSummary {
+      id: ID!
+      orderId: ID
+      name: String!
+      image: String
+      address: String
+    }
+
+    type RefreshPayload {
+      userId: ID!
+      token: String!
+      tokenExpiration: String
+      refreshToken: String!
+      refreshTokenExpiration: String
     }
 
     type UploadedImage {
@@ -192,8 +227,11 @@ export const schema = createSchema<GraphQLContext>({
       isActive: Boolean!
     }
   `,
+    catalogTypeDefs
+  ],
   resolvers: {
     Query: {
+      ...catalogResolvers.Query,
       health: () => 'ok',
 
       configuration: async (_parent, _args, ctx) => {
@@ -329,6 +367,7 @@ export const schema = createSchema<GraphQLContext>({
     },
 
     Mutation: {
+      ...catalogResolvers.Mutation,
       continueWithGoogle: async (_parent, args: { idToken: string }, ctx) => {
         const user = await upsertGoogleUser(args.idToken, ctx)
         const token = await signJWT(
@@ -539,6 +578,96 @@ export const schema = createSchema<GraphQLContext>({
         })
         const origin = new URL(ctx.request.url).origin
         return { imageUrl: `${origin}/uploads/${key}` }
+      },
+
+      ownerLogin: async (
+        _parent,
+        args: { email: string; password: string },
+        ctx
+      ) => {
+        const user = await ctx.env.DB.prepare(
+          `SELECT id, email, name, role, image_url, password_hash FROM users
+           WHERE email = ? AND role IN ('vendor', 'admin')`
+        )
+          .bind(args.email.toLowerCase())
+          .first<UserRow & { password_hash: string | null }>()
+        if (
+          !user?.password_hash ||
+          !(await verifyPassword(args.password, user.password_hash))
+        ) {
+          throw new Error('Invalid email or password')
+        }
+        const token = await signJWT(
+          { sub: user.id, role: user.role as 'vendor' },
+          ctx.env.JWT_SECRET
+        )
+        const refreshToken = await signJWT(
+          { sub: user.id, role: user.role as 'vendor', kind: 'refresh' },
+          ctx.env.JWT_SECRET,
+          90 * 24 * 60 * 60
+        )
+        const restaurants = await ctx.env.DB.prepare(
+          'SELECT id, name, image FROM restaurants WHERE owner_id = ?'
+        )
+          .bind(user.id)
+          .all<{ id: string; name: string; image: string | null }>()
+        const inThirtyDays = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        ).toISOString()
+        const inNinetyDays = new Date(
+          Date.now() + 90 * 24 * 60 * 60 * 1000
+        ).toISOString()
+        return {
+          userId: user.id,
+          token,
+          tokenExpiration: inThirtyDays,
+          refreshToken,
+          refreshTokenExpiration: inNinetyDays,
+          email: user.email,
+          userType: user.role.toUpperCase(),
+          restaurants: restaurants.results.map((r) => ({
+            id: r.id,
+            orderId: r.id,
+            name: r.name,
+            image: r.image,
+            address: null
+          })),
+          permissions: [],
+          userTypeId: user.id,
+          image: user.image_url,
+          name: user.name
+        }
+      },
+
+      refreshToken: async (
+        _parent,
+        args: { refreshToken: string; userType: string },
+        ctx
+      ) => {
+        const payload = await verifyJWT(args.refreshToken, ctx.env.JWT_SECRET)
+        if (!payload || payload.kind !== 'refresh') {
+          throw new AuthError('Invalid refresh token')
+        }
+        const token = await signJWT(
+          { sub: payload.sub, role: payload.role },
+          ctx.env.JWT_SECRET
+        )
+        const refreshToken = await signJWT(
+          { sub: payload.sub, role: payload.role, kind: 'refresh' },
+          ctx.env.JWT_SECRET,
+          90 * 24 * 60 * 60
+        )
+        return {
+          userId: payload.sub,
+          token,
+          tokenExpiration: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          refreshToken,
+          refreshTokenExpiration: new Date(
+            Date.now() + 90 * 24 * 60 * 60 * 1000
+          ).toISOString()
+        }
       }
     }
   }
