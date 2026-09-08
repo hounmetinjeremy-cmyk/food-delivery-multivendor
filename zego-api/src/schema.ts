@@ -1,5 +1,5 @@
 import { createSchema } from 'graphql-yoga'
-import { signJWT } from './auth'
+import { signJWT, verifyPassword } from './auth'
 import { verifyGoogleIdToken } from './google'
 import { AuthError, requireUser, type GraphQLContext } from './context'
 
@@ -7,10 +7,71 @@ function newId(): string {
   return crypto.randomUUID()
 }
 
+interface UserRow {
+  id: string
+  name: string
+  email: string | null
+  role: string
+  image_url: string | null
+  password_hash?: string | null
+}
+
+/** Shared by continueWithGoogle and login(type: "google") — verifies the
+ * Google ID token and finds-or-creates the matching customer user. */
+async function upsertGoogleUser(
+  idToken: string,
+  ctx: GraphQLContext
+): Promise<UserRow> {
+  if (!ctx.env.GOOGLE_CLIENT_IDS) {
+    throw new Error('Google Sign-In is not configured on this server')
+  }
+  const payload = await verifyGoogleIdToken(idToken, ctx.env.GOOGLE_CLIENT_IDS)
+  const email = payload.email!.toLowerCase()
+
+  let user = await ctx.env.DB.prepare(
+    'SELECT id, name, email, role, image_url FROM users WHERE google_id = ?'
+  )
+    .bind(payload.sub)
+    .first<UserRow>()
+
+  if (!user) {
+    const existingByEmail = await ctx.env.DB.prepare(
+      'SELECT id, name, email, role, image_url FROM users WHERE email = ?'
+    )
+      .bind(email)
+      .first<UserRow>()
+
+    if (existingByEmail) {
+      await ctx.env.DB.prepare('UPDATE users SET google_id = ? WHERE id = ?')
+        .bind(payload.sub, existingByEmail.id)
+        .run()
+      user = existingByEmail
+    } else {
+      const userId = newId()
+      const name = payload.name || email.split('@')[0]
+      await ctx.env.DB.prepare(
+        `INSERT INTO users (id, email, role, name, google_id, image_url)
+         VALUES (?, ?, 'customer', ?, ?, ?)`
+      )
+        .bind(userId, email, name, payload.sub, payload.picture ?? null)
+        .run()
+      user = {
+        id: userId,
+        name,
+        email,
+        role: 'customer',
+        image_url: payload.picture ?? null
+      }
+    }
+  }
+  return user
+}
+
 export const schema = createSchema<GraphQLContext>({
   typeDefs: /* GraphQL */ `
     type Query {
       health: String!
+      configuration: Configuration!
       availableRiders: [Rider!]!
       myConversations: [Conversation!]!
       messages(conversationId: ID!): [Message!]!
@@ -18,6 +79,16 @@ export const schema = createSchema<GraphQLContext>({
 
     type Mutation {
       continueWithGoogle(idToken: String!): AuthPayload!
+      login(
+        type: String!
+        email: String
+        password: String
+        appleId: String
+        idToken: String
+        name: String
+        notificationToken: String
+        isActive: Boolean
+      ): LoginProfile!
       startConversation(withUserId: ID!): Conversation!
       sendMessage(conversationId: ID!, body: String!): Message!
     }
@@ -66,10 +137,90 @@ export const schema = createSchema<GraphQLContext>({
       token: String!
       user: AuthUser!
     }
+
+    type Configuration {
+      _id: ID!
+      currency: String
+      currencySymbol: String
+      deliveryRate: Float
+      twilioEnabled: Boolean
+      webClientID: String
+      webAmplitudeApiKey: String
+      googleMapLibraries: String
+      googleColor: String
+      webSentryUrl: String
+      publishableKey: String
+      clientId: String
+      skipEmailVerification: Boolean
+      skipMobileVerification: Boolean
+      costType: String
+      firebaseKey: String
+      authDomain: String
+      projectId: String
+      storageBucket: String
+      msgSenderId: String
+      appId: String
+    }
+
+    type Location {
+      coordinates: [Float!]
+    }
+
+    type Address {
+      location: Location
+      deliveryAddress: String
+    }
+
+    type LoginProfile {
+      userId: ID!
+      token: String!
+      tokenExpiration: String
+      name: String
+      phone: String
+      phoneIsVerified: Boolean
+      email: String
+      emailIsVerified: Boolean
+      picture: String
+      addresses: [Address!]!
+      isNewUser: Boolean!
+      userTypeId: String
+      isActive: Boolean!
+    }
   `,
   resolvers: {
     Query: {
       health: () => 'ok',
+
+      configuration: async (_parent, _args, ctx) => {
+        const appConfig = await ctx.env.DB.prepare(
+          'SELECT currency_code, currency_symbol FROM app_config WHERE id = 1'
+        ).first<{ currency_code: string; currency_symbol: string }>()
+        const googleClientId =
+          ctx.env.GOOGLE_CLIENT_IDS?.split(',')[0]?.trim() ?? null
+        return {
+          _id: 'zego-config',
+          currency: appConfig?.currency_code ?? 'USD',
+          currencySymbol: appConfig?.currency_symbol ?? '$',
+          deliveryRate: 0,
+          twilioEnabled: false,
+          webClientID: googleClientId,
+          webAmplitudeApiKey: null,
+          googleMapLibraries: 'places,drawing,geometry',
+          googleColor: null,
+          webSentryUrl: null,
+          publishableKey: null,
+          clientId: null,
+          skipEmailVerification: true,
+          skipMobileVerification: true,
+          costType: 'perKM',
+          firebaseKey: null,
+          authDomain: null,
+          projectId: null,
+          storageBucket: null,
+          msgSenderId: null,
+          appId: null
+        }
+      },
 
       availableRiders: async (_parent, _args, ctx) => {
         const { results } = await ctx.env.DB.prepare(
@@ -174,66 +325,7 @@ export const schema = createSchema<GraphQLContext>({
 
     Mutation: {
       continueWithGoogle: async (_parent, args: { idToken: string }, ctx) => {
-        if (!ctx.env.GOOGLE_CLIENT_IDS) {
-          throw new Error('Google Sign-In is not configured on this server')
-        }
-        const payload = await verifyGoogleIdToken(
-          args.idToken,
-          ctx.env.GOOGLE_CLIENT_IDS
-        )
-        const email = payload.email!.toLowerCase()
-
-        let user = await ctx.env.DB.prepare(
-          'SELECT id, name, email, role, image_url FROM users WHERE google_id = ?'
-        )
-          .bind(payload.sub)
-          .first<{
-            id: string
-            name: string
-            email: string
-            role: string
-            image_url: string | null
-          }>()
-
-        if (!user) {
-          const existingByEmail = await ctx.env.DB.prepare(
-            'SELECT id, name, email, role, image_url FROM users WHERE email = ?'
-          )
-            .bind(email)
-            .first<{
-              id: string
-              name: string
-              email: string
-              role: string
-              image_url: string | null
-            }>()
-
-          if (existingByEmail) {
-            await ctx.env.DB.prepare(
-              'UPDATE users SET google_id = ? WHERE id = ?'
-            )
-              .bind(payload.sub, existingByEmail.id)
-              .run()
-            user = existingByEmail
-          } else {
-            const userId = newId()
-            const name = payload.name || email.split('@')[0]
-            await ctx.env.DB.prepare(
-              `INSERT INTO users (id, email, role, name, google_id, image_url)
-               VALUES (?, ?, 'customer', ?, ?, ?)`
-            )
-              .bind(userId, email, name, payload.sub, payload.picture ?? null)
-              .run()
-            user = {
-              id: userId,
-              name,
-              email,
-              role: 'customer',
-              image_url: payload.picture ?? null
-            }
-          }
-        }
-
+        const user = await upsertGoogleUser(args.idToken, ctx)
         const token = await signJWT(
           { sub: user.id, role: user.role as 'customer' },
           ctx.env.JWT_SECRET
@@ -247,6 +339,74 @@ export const schema = createSchema<GraphQLContext>({
             role: user.role,
             imageUrl: user.image_url
           }
+        }
+      },
+
+      login: async (
+        _parent,
+        args: {
+          type: string
+          email?: string
+          password?: string
+          idToken?: string
+          name?: string
+        },
+        ctx
+      ) => {
+        let user: UserRow
+        let isNewUser = false
+
+        if (args.type === 'google') {
+          if (!args.idToken) throw new Error('idToken is required')
+          const before = await ctx.env.DB.prepare(
+            'SELECT id FROM users WHERE google_id IS NOT NULL AND email = ?'
+          )
+            .bind(args.email?.toLowerCase() ?? '')
+            .first()
+          user = await upsertGoogleUser(args.idToken, ctx)
+          isNewUser = !before
+        } else if (args.type === 'default') {
+          if (!args.email || !args.password) {
+            throw new Error('email and password are required')
+          }
+          const found = await ctx.env.DB.prepare(
+            'SELECT id, name, email, role, image_url, password_hash FROM users WHERE email = ?'
+          )
+            .bind(args.email.toLowerCase())
+            .first<UserRow>()
+          if (
+            !found?.password_hash ||
+            !(await verifyPassword(args.password, found.password_hash))
+          ) {
+            throw new Error('Invalid email or password')
+          }
+          user = found
+        } else {
+          throw new Error(`Login type "${args.type}" is not supported yet`)
+        }
+
+        const token = await signJWT(
+          { sub: user.id, role: user.role as 'customer' },
+          ctx.env.JWT_SECRET
+        )
+        const tokenExpiration = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        ).toISOString()
+
+        return {
+          userId: user.id,
+          token,
+          tokenExpiration,
+          name: user.name,
+          phone: null,
+          phoneIsVerified: false,
+          email: user.email,
+          emailIsVerified: true,
+          picture: user.image_url,
+          addresses: [],
+          isNewUser,
+          userTypeId: user.role,
+          isActive: true
         }
       },
 
