@@ -33,6 +33,7 @@ import ChangePassword from "./change-password";
 import VerificationEmailForChangePassword from "./change-password/email-otp";
 import { Tooltip } from "react-tooltip";
 import { useTranslations } from "next-intl";
+import { syncZegoApiSession } from "@/lib/zego-api/auth";
 
 export default function AuthModal({
   isAuthModalVisible,
@@ -91,6 +92,11 @@ export default function AuthModal({
       setIsLoading(true);
       const idToken = await getGoogleIdToken();
       const userData = await getGoogleUserInfo(idToken);
+
+      // Also open a zego-api session with the same Google token, so the
+      // Livreur/Messagerie tabs (backed by zego-api) know who's signed in.
+      // This never throws, so it can't affect the login below.
+      void syncZegoApiSession(idToken);
 
       const userLoginResponse = await handleUserLogin({
         type: "google",

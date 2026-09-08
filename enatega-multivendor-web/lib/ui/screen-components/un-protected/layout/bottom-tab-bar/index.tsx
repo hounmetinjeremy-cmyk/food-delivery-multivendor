@@ -13,17 +13,14 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/", label: "Accueil", icon: faHouse, match: (p: string) => p === "/" },
-  { href: "/rider", label: "Livreur", icon: faMotorcycle, match: (p: string) => p.startsWith("/rider") },
-  { href: "/profile/customerTicket", label: "Messagerie", icon: faCommentDots, match: (p: string) => p.startsWith("/profile/customerTicket") },
+  { href: "/riders", label: "Livreur", icon: faMotorcycle, match: (p: string) => p.startsWith("/riders") },
+  { href: "/messages", label: "Messagerie", icon: faCommentDots, match: (p: string) => p.startsWith("/messages") },
   { href: "/profile/wallet", label: "Portefeuille", icon: faWallet, match: (p: string) => p.startsWith("/profile/wallet") },
   {
     href: "/profile",
     label: "Profil",
     icon: faUser,
-    match: (p: string) =>
-      p.startsWith("/profile") &&
-      !p.startsWith("/profile/wallet") &&
-      !p.startsWith("/profile/customerTicket"),
+    match: (p: string) => p.startsWith("/profile") && !p.startsWith("/profile/wallet"),
   },
 ];
 
