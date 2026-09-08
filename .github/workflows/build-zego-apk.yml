@@ -1,0 +1,77 @@
+name: Build ZeGo APK
+
+# Single APK for everyone (customers, vendors, riders) — a thin native
+# shell (Capacitor) around the live site at enatega-multivendor-web, which
+# already has the 5-tab structure and role-switching through Profil. There
+# is no separate app codebase to maintain: this just packages the deployed
+# site as an installable Android app.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "enatega-multivendor-web/capacitor.config.ts"
+      - "enatega-multivendor-web/capacitor-shell/**"
+      - "enatega-multivendor-web/android/**"
+      - "enatega-multivendor-web/package.json"
+      - ".github/workflows/build-zego-apk.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: enatega-multivendor-web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: enatega-multivendor-web/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: enatega-multivendor-web/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/zego.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zego-apk
+          path: enatega-multivendor-web/dist/zego.apk
+          retention-days: 90
+
+      - name: Publish to the "latest APK" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: ZeGo APK (latest)
+          body: >
+            Auto-built from the latest push to main. This is a debug build —
+            installable directly (enable "install from unknown sources" on
+            Android), not yet signed for the Play Store.
+          files: enatega-multivendor-web/dist/zego.apk
+          prerelease: true

@@ -24,6 +24,12 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
         "https://zego-admin.hounmetinjeremy.workers.dev",
     },
     { label: "Devenir livreur", path: "#become-rider" },
+    {
+      label: "Télécharger l'application (APK)",
+      path:
+        process.env.NEXT_PUBLIC_APK_URL ??
+        "https://github.com/hounmetinjeremy-cmyk/food-delivery-multivendor/releases/download/apk-latest/zego.apk",
+    },
   ];
   return isSingleVendor ? [
     ...base.slice(0, 3),

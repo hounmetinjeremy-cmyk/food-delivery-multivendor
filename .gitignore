@@ -50,6 +50,14 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# The blanket android/ rules above are leftover from this repo's original
+# single-Expo-app layout, where the native folder was always disposable.
+# enatega-multivendor-web/android is the opposite: it's the committed
+# Capacitor project for the single ZeGo APK, not a generated build folder —
+# re-include it (its own android/.gitignore still excludes build output).
+!enatega-multivendor-web/android/
+!enatega-multivendor-web/android/**
+
 # BUCK
 buck-out/
 \.buckd/
