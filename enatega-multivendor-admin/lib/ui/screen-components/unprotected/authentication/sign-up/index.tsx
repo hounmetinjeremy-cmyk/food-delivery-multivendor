@@ -2,7 +2,7 @@
 
 // Core
 import { Form, Formik } from 'formik';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import * as Yup from 'yup';
 
 // Components
@@ -19,12 +19,32 @@ import { Divider } from 'primereact/divider';
 
 // Methods
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onUseLocalStorage } from '@/lib/utils/methods';
+import { setAuthTokens } from '@/lib/utils/methods/auth';
 
 // Contants
-import { PasswordErrors, SignUpErrors } from '@/lib/utils/constants';
+import { APP_NAME, PasswordErrors, SignUpErrors } from '@/lib/utils/constants';
+import { DEFAULT_ROUTES } from '@/lib/utils/constants/routes';
 
 // Interface
 import { ISignUpForm } from '@/lib/utils/interfaces/forms';
+
+// GraphQL
+import { gql, useMutation, ApolloError } from '@apollo/client';
+import { OWNER_LOGIN } from '@/lib/api/graphql';
+import { ToastContext } from '@/lib/context/global/toast.context';
+
+// Hooks
+import { useRouter } from 'next/navigation';
+import { useUserContext } from '@/lib/hooks/useUser';
+
+const SIGN_UP_VENDOR = gql`
+  mutation SignUpVendor($vendorInput: VendorInput) {
+    createVendor(vendorInput: $vendorInput) {
+      id
+    }
+  }
+`;
 
 const initialValues: ISignUpForm = {
   firstName: '',
@@ -37,6 +57,13 @@ const initialValues: ISignUpForm = {
 export default function SignupMain() {
   const [account] = useState<ISignUpForm>(initialValues);
 
+  const { showToast } = useContext(ToastContext);
+  const router = useRouter();
+  const { refreshUserSession } = useUserContext();
+
+  const [createVendor, { loading: creating }] = useMutation(SIGN_UP_VENDOR);
+  const [ownerLogin, { loading: loggingIn }] = useMutation(OWNER_LOGIN);
+
   const SignupSchema = Yup.object().shape({
     firstName: Yup.string().min(2).max(35).required('Required'),
     lastName: Yup.string().min(2).max(35).required('Required'),
@@ -47,6 +74,70 @@ export default function SignupMain() {
       .oneOf([Yup.ref('password'), null], 'Password must match')
       .required('Required'),
   });
+
+  const onSubmitHandler = async (values: ISignUpForm) => {
+    try {
+      await createVendor({
+        variables: {
+          vendorInput: {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            password: values.password,
+          },
+        },
+      });
+
+      const response = await ownerLogin({
+        variables: {
+          email: values.email,
+          password: values.password,
+        },
+      });
+
+      const ownerSession = response.data?.ownerLogin;
+      if (!ownerSession) {
+        throw new Error('Unable to load session');
+      }
+
+      onUseLocalStorage('save', `user-${APP_NAME}`, JSON.stringify(ownerSession));
+      setAuthTokens({
+        userId: ownerSession.userId,
+        token: ownerSession.token,
+        tokenExpiration: ownerSession.tokenExpiration,
+        refreshToken: ownerSession.refreshToken,
+        refreshTokenExpiration: ownerSession.refreshTokenExpiration,
+        userType: ownerSession.userType,
+      });
+
+      const verifiedUser = await refreshUserSession(ownerSession);
+      if (!verifiedUser) {
+        showToast({
+          type: 'error',
+          title: 'Sign Up',
+          message: 'Account created, but we could not verify your session. Please log in.',
+        });
+        return;
+      }
+
+      showToast({
+        type: 'success',
+        title: 'Sign Up',
+        message: 'Your account has been created successfully.',
+      });
+
+      router.replace(DEFAULT_ROUTES[verifiedUser.userType]);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Sign Up',
+        message:
+          err instanceof ApolloError
+            ? (err.graphQLErrors[0]?.message ?? err.message)
+            : 'Failed to create your account. Please try again.',
+      });
+    }
+  };
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -64,7 +155,7 @@ export default function SignupMain() {
               <Formik
                 initialValues={account}
                 validationSchema={SignupSchema}
-                onSubmit={() => {}}
+                onSubmit={onSubmitHandler}
                 validateOnChange={false}
               >
                 {({ values, errors, handleChange }) => {
@@ -215,6 +306,7 @@ export default function SignupMain() {
                         rounded={true}
                         icon="pi pi-google"
                         type="submit"
+                        loading={creating || loggingIn}
                       />
                     </Form>
                   );

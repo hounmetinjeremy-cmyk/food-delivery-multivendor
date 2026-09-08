@@ -1,7 +1,7 @@
 import { createSchema } from 'graphql-yoga'
 import { signJWT, verifyJWT, verifyPassword } from './auth'
 import { verifyGoogleIdToken } from './google'
-import { AuthError, requireUser, type GraphQLContext } from './context'
+import { AuthError, requireUser, requireRole, type GraphQLContext } from './context'
 import { catalogTypeDefs, catalogResolvers } from './catalog'
 
 function newId(): string {
@@ -68,6 +68,52 @@ async function upsertGoogleUser(
   return user
 }
 
+/** Shared by ownerLogin and ownerSession — signs fresh tokens and loads the
+ * vendor/admin's restaurants into the shape the admin app's Apollo queries expect. */
+async function buildOwnerSessionPayload(user: UserRow, ctx: GraphQLContext) {
+  const token = await signJWT(
+    { sub: user.id, role: user.role as 'vendor' },
+    ctx.env.JWT_SECRET
+  )
+  const refreshToken = await signJWT(
+    { sub: user.id, role: user.role as 'vendor', kind: 'refresh' },
+    ctx.env.JWT_SECRET,
+    90 * 24 * 60 * 60
+  )
+  const restaurants = await ctx.env.DB.prepare(
+    'SELECT id, name, image FROM restaurants WHERE owner_id = ?'
+  )
+    .bind(user.id)
+    .all<{ id: string; name: string; image: string | null }>()
+  const inThirtyDays = new Date(
+    Date.now() + 30 * 24 * 60 * 60 * 1000
+  ).toISOString()
+  const inNinetyDays = new Date(
+    Date.now() + 90 * 24 * 60 * 60 * 1000
+  ).toISOString()
+  return {
+    userId: user.id,
+    token,
+    tokenExpiration: inThirtyDays,
+    refreshToken,
+    refreshTokenExpiration: inNinetyDays,
+    email: user.email,
+    userType: user.role.toUpperCase(),
+    restaurants: restaurants.results.map((r) => ({
+      id: r.id,
+      _id: r.id,
+      orderId: r.id,
+      name: r.name,
+      image: r.image,
+      address: null
+    })),
+    permissions: [],
+    userTypeId: user.id,
+    image: user.image_url,
+    name: user.name
+  }
+}
+
 export const schema = createSchema<GraphQLContext>({
   typeDefs: [
     /* GraphQL */ `
@@ -77,6 +123,7 @@ export const schema = createSchema<GraphQLContext>({
       availableRiders: [Rider!]!
       myConversations: [Conversation!]!
       messages(conversationId: ID!): [Message!]!
+      ownerSession: OwnerLoginPayload!
     }
 
     type Mutation {
@@ -115,6 +162,7 @@ export const schema = createSchema<GraphQLContext>({
 
     type OwnerRestaurantSummary {
       id: ID!
+      _id: ID!
       orderId: ID
       name: String!
       image: String
@@ -363,6 +411,17 @@ export const schema = createSchema<GraphQLContext>({
           body: m.body,
           createdAt: m.created_at
         }))
+      },
+
+      ownerSession: async (_parent, _args, ctx) => {
+        const authUser = requireRole(ctx, 'vendor', 'admin')
+        const user = await ctx.env.DB.prepare(
+          'SELECT id, email, name, role, image_url FROM users WHERE id = ?'
+        )
+          .bind(authUser.sub)
+          .first<UserRow>()
+        if (!user) throw new AuthError()
+        return buildOwnerSessionPayload(user, ctx)
       }
     },
 
@@ -597,46 +656,7 @@ export const schema = createSchema<GraphQLContext>({
         ) {
           throw new Error('Invalid email or password')
         }
-        const token = await signJWT(
-          { sub: user.id, role: user.role as 'vendor' },
-          ctx.env.JWT_SECRET
-        )
-        const refreshToken = await signJWT(
-          { sub: user.id, role: user.role as 'vendor', kind: 'refresh' },
-          ctx.env.JWT_SECRET,
-          90 * 24 * 60 * 60
-        )
-        const restaurants = await ctx.env.DB.prepare(
-          'SELECT id, name, image FROM restaurants WHERE owner_id = ?'
-        )
-          .bind(user.id)
-          .all<{ id: string; name: string; image: string | null }>()
-        const inThirtyDays = new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000
-        ).toISOString()
-        const inNinetyDays = new Date(
-          Date.now() + 90 * 24 * 60 * 60 * 1000
-        ).toISOString()
-        return {
-          userId: user.id,
-          token,
-          tokenExpiration: inThirtyDays,
-          refreshToken,
-          refreshTokenExpiration: inNinetyDays,
-          email: user.email,
-          userType: user.role.toUpperCase(),
-          restaurants: restaurants.results.map((r) => ({
-            id: r.id,
-            orderId: r.id,
-            name: r.name,
-            image: r.image,
-            address: null
-          })),
-          permissions: [],
-          userTypeId: user.id,
-          image: user.image_url,
-          name: user.name
-        }
+        return buildOwnerSessionPayload(user, ctx)
       },
 
       refreshToken: async (

@@ -460,6 +460,7 @@ export const catalogTypeDefs = /* GraphQL */ `
 
   type Vendor {
     id: ID!
+    _id: ID!
     email: String
     name: String
     image: String
@@ -1299,6 +1300,7 @@ export const catalogResolvers = {
         .run()
       return {
         id,
+        _id: id,
         email,
         name,
         image: input.image ?? null,
@@ -1348,6 +1350,7 @@ export const catalogResolvers = {
         }>()
       return {
         id: user!.id,
+        _id: user!.id,
         email: user!.email,
         name: user!.name,
         image: user!.image_url,
