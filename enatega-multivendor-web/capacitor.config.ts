@@ -16,6 +16,18 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
   },
+  plugins: {
+    // Only Google sign-in is wired up (login-with-google/index.tsx) — the
+    // other providers stay disabled so their native SDKs aren't bundled.
+    SocialLogin: {
+      providers: {
+        google: true,
+        facebook: false,
+        apple: false,
+        twitter: false,
+      },
+    },
+  },
 };
 
 export default config;

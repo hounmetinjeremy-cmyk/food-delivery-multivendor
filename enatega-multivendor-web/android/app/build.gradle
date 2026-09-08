@@ -16,7 +16,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Checked-in debug keystore (committed to the repo — a debug key isn't
+    // meant to be secret) so every build, local or CI, signs with the same
+    // certificate. Without this, Gradle's default debug signing generates a
+    // fresh keystore per machine/CI run, so the SHA-1 fingerprint changes on
+    // every rebuild — breaking Google Sign-In, which is registered against a
+    // fixed SHA-1 in Google Cloud Console.
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

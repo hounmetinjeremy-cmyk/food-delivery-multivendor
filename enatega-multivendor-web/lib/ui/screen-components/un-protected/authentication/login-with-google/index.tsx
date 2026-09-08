@@ -1,12 +1,18 @@
 // Components
 import { useAuth } from "@/lib/context/auth/auth.context";
+import { useConfig } from "@/lib/context/configuration/configuration.context";
 import CustomButton from "@/lib/ui/useable-components/button";
+import CustomIconButton from "@/lib/ui/useable-components/custom-icon-button";
 import Divider from "@/lib/ui/useable-components/custom-divider";
 import { ILoginWithGoogleProps } from "@/lib/utils/interfaces";
+
+// Assets
+import GoogleLogo from "@/public/assets/images/svgs/google-logo";
 
 // Hooks
 import { useTranslations } from "next-intl";
 import useToast from "@/lib/hooks/useToast";
+import { useRef } from "react";
 
 // Next
 import Link from "next/link";
@@ -14,7 +20,14 @@ import Link from "next/link";
 // Google
 import { GoogleLogin } from "@react-oauth/google";
 
-// Font Awesome
+// Capacitor — inside the ZeGo APK's WebView, Google blocks its Sign-In SDK
+// (it detects an embedded WebView user agent and refuses to authenticate
+// inline for anti-phishing reasons), so it kicks the user out to the system
+// browser instead — with no way back into the app. The native Credential
+// Manager plugin below talks to Google through Android's own account system
+// instead of the WebView, so that escape hatch never triggers.
+import { Capacitor } from "@capacitor/core";
+import { SocialLogin } from "@capgo/capacitor-social-login";
 
 export default function LoginWithGoogle({
   googleLogin,
@@ -24,6 +37,42 @@ export default function LoginWithGoogle({
   const t = useTranslations();
   const { isLoading } = useAuth();
   const { showToast } = useToast();
+  const { GOOGLE_CLIENT_ID } = useConfig();
+  const isNativeInitialized = useRef(false);
+  const isNativeApp = Capacitor.isNativePlatform();
+
+  const handleNativeGoogleLogin = async () => {
+    try {
+      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "not_found") {
+        throw new Error(
+          "Social login is not configured right now. Please use email and password.",
+        );
+      }
+      if (!isNativeInitialized.current) {
+        await SocialLogin.initialize({
+          google: { webClientId: GOOGLE_CLIENT_ID },
+        });
+        isNativeInitialized.current = true;
+      }
+      const { result } = await SocialLogin.login({
+        provider: "google",
+        options: { scopes: ["email", "profile"] },
+      });
+      const idToken = "idToken" in result ? result.idToken : null;
+      if (!idToken) {
+        throw new Error(
+          "Your social sign-in did not return a valid token. Please try again.",
+        );
+      }
+      void googleLogin(idToken);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Google sign-in failed. Please try again.";
+      showToast({ type: "error", title: t("login_error"), message });
+    }
+  };
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center px-2 py-6 md:px-8 dark:text-white dark:bg-gray-900">
@@ -40,38 +89,50 @@ export default function LoginWithGoogle({
       </div>
 
       {/* Google Login */}
-      <div
-        className={`w-full max-w-sm mb-4 flex justify-center [&>div]:w-full [&_iframe]:!w-full ${
-          isLoading ? "pointer-events-none opacity-60" : ""
-        }`}
-      >
-        <GoogleLogin
-          theme="outline"
-          shape="pill"
-          size="large"
-          width="384"
-          text="continue_with"
-          onSuccess={(credentialResponse) => {
-            if (!credentialResponse.credential) {
+      {isNativeApp ? (
+        <div className="w-full max-w-sm mb-4">
+          <CustomIconButton
+            loading={isLoading}
+            SvgIcon={GoogleLogo}
+            classNames="hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:border-gray-500 w-full"
+            title={t("sign_in_with_google_label")}
+            handleClick={handleNativeGoogleLogin}
+          />
+        </div>
+      ) : (
+        <div
+          className={`w-full max-w-sm mb-4 flex justify-center [&>div]:w-full [&_iframe]:!w-full ${
+            isLoading ? "pointer-events-none opacity-60" : ""
+          }`}
+        >
+          <GoogleLogin
+            theme="outline"
+            shape="pill"
+            size="large"
+            width="384"
+            text="continue_with"
+            onSuccess={(credentialResponse) => {
+              if (!credentialResponse.credential) {
+                showToast({
+                  type: "error",
+                  title: t("login_error"),
+                  message:
+                    "Your social sign-in did not return a valid token. Please try again.",
+                });
+                return;
+              }
+              void googleLogin(credentialResponse.credential);
+            }}
+            onError={() => {
               showToast({
                 type: "error",
                 title: t("login_error"),
-                message:
-                  "Your social sign-in did not return a valid token. Please try again.",
+                message: "Google sign-in failed. Please try again.",
               });
-              return;
-            }
-            void googleLogin(credentialResponse.credential);
-          }}
-          onError={() => {
-            showToast({
-              type: "error",
-              title: t("login_error"),
-              message: "Google sign-in failed. Please try again.",
-            });
-          }}
-        />
-      </div>
+            }}
+          />
+        </div>
+      )}
 
       {/* Divider */}
       <div className="flex items-center justify-center w-full max-w-sm mb-4">
