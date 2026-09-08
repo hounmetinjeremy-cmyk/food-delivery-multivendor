@@ -15,6 +15,14 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
   const defaultTabs = useProfileDefaultTabs();
   const tabsToRender: ITabItem[] = tabs ?? defaultTabs; // ✅ safe fallback
 
+  const goToTab = (path: string) => {
+    if (path.startsWith("http")) {
+      window.open(path, "_blank", "noopener,noreferrer");
+      return;
+    }
+    router.push(path);
+  };
+
   const scrollableStyles: CSSProperties = {
     msOverflowStyle: "none", // IE and Edge
     scrollbarWidth: "none", // Firefox
@@ -60,7 +68,7 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
               key={tab.path}
               tab={tab}
               isActive={isActive}
-              onClick={() => router.push(tab.path)}
+              onClick={() => goToTab(tab.path)}
               className={`py-1 text-sm font-medium whitespace-nowrap flex-shrink-0 mx-3 snap-center dark:text-gray-300 ${
                 isActive ? 'active-tab' : ''
               }`}

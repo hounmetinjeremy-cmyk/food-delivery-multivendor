@@ -18,6 +18,12 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
     // same content) — just surfaced from the Profile hub as requested.
     { label: "Devenir vendeur / fournisseur", path: "/restaurantInfo" },
     { label: "Devenir livreur", path: "/rider" },
+    {
+      label: "Tableau de bord vendeur / gérant",
+      path:
+        process.env.NEXT_PUBLIC_ADMIN_URL ??
+        "https://zego-admin.hounmetinjeremy.workers.dev",
+    },
   ];
   return isSingleVendor ? [
     ...base.slice(0, 3),
