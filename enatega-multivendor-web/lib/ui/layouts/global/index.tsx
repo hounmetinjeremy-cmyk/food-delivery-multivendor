@@ -12,14 +12,16 @@ import { useConfig } from "@/lib/context/configuration/configuration.context";
 import { GoogleMapsProvider } from "@/lib/context/global/google-maps.context";
 import AuthModal from "@/lib/ui/screen-components/un-protected/authentication";
 import AppFooter from "../../screen-components/un-protected/layout/app-footer";
+import BottomTabBar from "../../screen-components/un-protected/layout/bottom-tab-bar";
 import StripeOrderRecovery from "../../screens/protected/order/stripe-order-recovery";
 
-// Search Context 
+// Search Context
 import { useSearchUI } from "@/lib/context/search/search.context";
 
 // Hooks
 import { useAuth } from "@/lib/context/auth/auth.context";
 import { usePathname } from "next/navigation";
+import { hasValidAuthToken } from "@/lib/utils/methods/auth";
 
 const AppLayout = ({ children }: IProvider) => {
   const pathname = usePathname();
@@ -39,6 +41,19 @@ const AppLayout = ({ children }: IProvider) => {
       return !prev;
     });
   };
+
+  // Gate entry behind Google sign-in: if there's no valid session yet, open
+  // the existing auth modal straight on its Google panel (panel 0) instead
+  // of requiring the user to find and tap a login button first.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!hasValidAuthToken()) {
+      setActivePanel(0);
+      setIsAuthModalVisible(true);
+    }
+    // Only ever run once on mount — the modal's own controls take over after that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setIsScrolled(false);
@@ -66,7 +81,7 @@ const AppLayout = ({ children }: IProvider) => {
         <AppTopbar handleModalToggle={handleModalToggle} />
       </div>
       <div className={`layout-main-container ${isSearchFocused && 'blur-md overflow-hidden h-screen '}`}>
-        <main className="layout-main min-h-screen w-full bg-dispatch-ground dark:bg-gray-950">
+        <main className="layout-main min-h-screen w-full bg-dispatch-ground pb-[64px] dark:bg-gray-950 md:pb-0">
           <StripeOrderRecovery />
           {children}
         </main>
@@ -78,6 +93,7 @@ const AppLayout = ({ children }: IProvider) => {
         handleModalToggle={handleModalToggle}
         isAuthModalVisible={isAuthModalVisible}
       />
+      <BottomTabBar />
     </div>
   );
 
