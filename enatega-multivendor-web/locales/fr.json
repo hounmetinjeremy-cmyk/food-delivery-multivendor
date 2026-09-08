@@ -813,6 +813,8 @@
   "confirmPasswordRequired": "Confirmez votre mot de passe",
   "confirmPasswordMismatch": "Les mots de passe doivent correspondre",
   "termsRequired": "Acceptez les conditions pour continuer",
+  "you_are_now_a_rider_message": "Vous êtes maintenant livreur ! Ouvrez l'onglet Livreur pour commencer.",
+  "signed_in_with_google_message": "Vous êtes connecté avec Google — pas besoin de créer un compte séparé.",
   "invalid_credentials": "Identifiants invalides",
   "Horrible": "Horrible",
   "Bad": "Mauvais",

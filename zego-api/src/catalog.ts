@@ -1,6 +1,6 @@
 import type { GraphQLContext } from './context'
 import { AuthError, requireUser } from './context'
-import { hashPassword } from './auth'
+import { hashPassword, signJWT } from './auth'
 
 function newId(): string {
   return crypto.randomUUID()
@@ -413,7 +413,7 @@ export const catalogTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    submitPartnerRequest(input: PartnerRequestInput!): Boolean!
+    submitPartnerRequest(input: PartnerRequestInput!): PartnerRequestResult!
 
     createVendor(vendorInput: VendorInput): Vendor!
     editVendor(vendorInput: VendorInput): Vendor!
@@ -471,11 +471,20 @@ export const catalogTypeDefs = /* GraphQL */ `
 
   input PartnerRequestInput {
     requestType: String!
-    firstName: String!
-    lastName: String!
-    email: String!
+    firstName: String
+    lastName: String
+    email: String
     phone: String
     password: String
+  }
+
+  type PartnerRequestResult {
+    success: Boolean!
+    # Set only when the request was made by someone already signed in with
+    # Google and it upgraded their account in place (rider auto-activation) —
+    # lets the app refresh its session without asking them to log in again.
+    token: String
+    role: String
   }
 
   input VendorInput {
@@ -1231,9 +1240,9 @@ export const catalogResolvers = {
       args: {
         input: {
           requestType: string
-          firstName: string
-          lastName: string
-          email: string
+          firstName?: string
+          lastName?: string
+          email?: string
           phone?: string
           password?: string
         }
@@ -1244,11 +1253,38 @@ export const catalogResolvers = {
       if (input.requestType !== 'rider' && input.requestType !== 'vendor') {
         throw new Error('requestType must be "rider" or "vendor"')
       }
-      const passwordHash = input.password
-        ? await hashPassword(input.password)
-        : null
-      const email = input.email.toLowerCase()
-      const name = [input.firstName, input.lastName].filter(Boolean).join(' ')
+
+      // Already signed in with Google? Reuse that identity instead of making
+      // them retype their name/email and invent a separate password.
+      const authUser = ctx.user
+      let existingUserId: string | null = null
+      let email: string
+      let firstName: string
+      let lastName: string
+      let passwordHash: string | null = null
+
+      if (authUser) {
+        const account = await ctx.env.DB.prepare(
+          'SELECT id, email, name FROM users WHERE id = ?'
+        )
+          .bind(authUser.sub)
+          .first<{ id: string; email: string | null; name: string }>()
+        if (!account) throw new AuthError()
+        const [first, ...rest] = account.name.split(' ')
+        existingUserId = account.id
+        email = (account.email ?? '').toLowerCase()
+        firstName = first || account.name
+        lastName = rest.join(' ')
+      } else {
+        if (!input.firstName || !input.lastName || !input.email) {
+          throw new Error('firstName, lastName and email are required')
+        }
+        email = input.email.toLowerCase()
+        firstName = input.firstName
+        lastName = input.lastName
+        passwordHash = input.password ? await hashPassword(input.password) : null
+      }
+      const name = [firstName, lastName].filter(Boolean).join(' ')
 
       // Riders have no separate onboarding dashboard yet, so self-registration
       // activates them immediately (visible in the Livreur list right away)
@@ -1263,8 +1299,8 @@ export const catalogResolvers = {
         .bind(
           newId(),
           input.requestType,
-          input.firstName,
-          input.lastName,
+          firstName,
+          lastName,
           email,
           input.phone ?? null,
           passwordHash,
@@ -1272,30 +1308,50 @@ export const catalogResolvers = {
         )
         .run()
 
-      if (isAutoActivatedRider) {
-        const userId = newId()
-        await ctx.env.DB.prepare(
-          `INSERT INTO users (id, email, phone, password_hash, name, first_name, last_name, role)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'rider')`
-        )
-          .bind(
-            userId,
-            email,
-            input.phone ?? null,
-            passwordHash,
-            name,
-            input.firstName,
-            input.lastName
-          )
-          .run()
-        await ctx.env.DB.prepare(
-          `INSERT INTO rider_profiles (user_id, is_available) VALUES (?, 1)`
-        )
-          .bind(userId)
-          .run()
+      if (!isAutoActivatedRider) {
+        return { success: true, token: null, role: null }
       }
 
-      return true
+      if (existingUserId) {
+        // Upgrade the existing Google-authenticated account in place instead
+        // of creating a second, disconnected identity for the same person.
+        await ctx.env.DB.prepare(
+          `UPDATE users SET role = 'rider', phone = COALESCE(?, phone) WHERE id = ? AND role = 'customer'`
+        )
+          .bind(input.phone ?? null, existingUserId)
+          .run()
+        await ctx.env.DB.prepare(
+          `INSERT INTO rider_profiles (user_id, is_available) VALUES (?, 1)
+           ON CONFLICT(user_id) DO NOTHING`
+        )
+          .bind(existingUserId)
+          .run()
+        const token = await signJWT({ sub: existingUserId, role: 'rider' }, ctx.env.JWT_SECRET)
+        return { success: true, token, role: 'rider' }
+      }
+
+      const userId = newId()
+      await ctx.env.DB.prepare(
+        `INSERT INTO users (id, email, phone, password_hash, name, first_name, last_name, role)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'rider')`
+      )
+        .bind(
+          userId,
+          email,
+          input.phone ?? null,
+          passwordHash,
+          name,
+          firstName,
+          lastName
+        )
+        .run()
+      await ctx.env.DB.prepare(
+        `INSERT INTO rider_profiles (user_id, is_available) VALUES (?, 1)`
+      )
+        .bind(userId)
+        .run()
+
+      return { success: true, token: null, role: null }
     },
 
     createVendor: async (

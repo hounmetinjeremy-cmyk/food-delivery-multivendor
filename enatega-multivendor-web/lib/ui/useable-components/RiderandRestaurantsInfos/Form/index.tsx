@@ -12,7 +12,7 @@ import { Button } from "primereact/button";
 // libraries and utils
 import { useRouter } from "next/navigation";
 import "react-phone-input-2/lib/style.css";
-import { zegoApiFetch } from "@/lib/zego-api/client";
+import { zegoApiFetch, setZegoApiToken } from "@/lib/zego-api/client";
 
 // interfcaes
 import { VendorFormValues } from "@/lib/utils/interfaces/Rider-restaurant.interface";
@@ -26,6 +26,7 @@ import emailValidationSchema from "./validationSchema";
 // hooks
 import useToast from "@/lib/hooks/useToast";
 import { useTranslations } from "next-intl";
+import { useAuth } from "@/lib/context/auth/auth.context";
 
 interface formProps {
   heading: string;
@@ -35,42 +36,74 @@ interface formProps {
 
 const SUBMIT_PARTNER_REQUEST_MUTATION = /* GraphQL */ `
   mutation SubmitPartnerRequest($input: PartnerRequestInput!) {
-    submitPartnerRequest(input: $input)
+    submitPartnerRequest(input: $input) {
+      success
+      token
+      role
+    }
   }
 `;
 
-const initialValues: VendorFormValues = {
-  firstName: "",
-  lastName: "",
-  phoneNumber: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  termsAccepted: false,
-};
+interface SubmitPartnerRequestResponse {
+  submitPartnerRequest: {
+    success: boolean;
+    token: string | null;
+    role: string | null;
+  };
+}
 
 const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
   const { showToast } = useToast();
   const router = useRouter();
   const t = useTranslations();
+  // Already signed in with Google (the normal case when this form is opened
+  // from Profile)? Then we already know who they are — don't make them
+  // retype their name/email or invent a separate password for this account.
+  const { user } = useAuth();
+  const isAuthenticated = Boolean(user?.email);
+
+  const initialValues: VendorFormValues = {
+    firstName: user?.name?.split(" ")[0] ?? "",
+    lastName: user?.name?.split(" ").slice(1).join(" ") ?? "",
+    phoneNumber: user?.phone ?? "",
+    email: user?.email ?? "",
+    password: "",
+    confirmPassword: "",
+    termsAccepted: false,
+  };
 
   const handleSubmit = async (formData: VendorFormValues) => {
     try {
-      await zegoApiFetch(SUBMIT_PARTNER_REQUEST_MUTATION, {
-        input: {
-          requestType,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phoneNumber,
-          password: formData.password,
-        },
-      });
+      const { submitPartnerRequest } =
+        await zegoApiFetch<SubmitPartnerRequestResponse>(
+          SUBMIT_PARTNER_REQUEST_MUTATION,
+          {
+            input: isAuthenticated
+              ? { requestType, phone: formData.phoneNumber }
+              : {
+                  requestType,
+                  firstName: formData.firstName,
+                  lastName: formData.lastName,
+                  email: formData.email,
+                  phone: formData.phoneNumber,
+                  password: formData.password,
+                },
+          },
+        );
+
+      // Upgraded in place to a rider account — refresh the session token so
+      // the Livreur tab recognizes the new role immediately, no re-login.
+      if (submitPartnerRequest.token) {
+        setZegoApiToken(submitPartnerRequest.token);
+      }
 
       showToast({
         type: "success",
         title: t("toast_success"),
-        message: t("form_submitted_successfully"),
+        message:
+          requestType === "rider" && isAuthenticated
+            ? t("you_are_now_a_rider_message")
+            : t("form_submitted_successfully"),
         duration: 4000,
       });
 
@@ -95,75 +128,88 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
 
       <Formik
         initialValues={initialValues}
-        validationSchema={emailValidationSchema(t)}
+        validationSchema={emailValidationSchema(t, isAuthenticated)}
         onSubmit={handleSubmit}
+        enableReinitialize
       >
         {({ values, setFieldValue, isSubmitting }) => (
           <Form className="grid gap-5">
-            {/* First and Last Name */}
-
-            <div className="gap-4 flex w-[100%] justify-between">
-              <div className="w-[50%]">
-                <label className="text-sm dark:text-gray-300">
-                  {t("first_name_label")}
-                </label>
-                <Field name="firstName">
-                  {({ field }: any) => (
-                    <InputText
-                      placeholder={t("first_name_label")}
-                      {...field}
-                      className="w-full text-sm border-2 border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
-                    />
-                  )}
-                </Field>
-                <ErrorMessage
-                  name="firstName"
-                  component="small"
-                  className="p-error text-sm"
-                />
+            {isAuthenticated ? (
+              /* Already signed in with Google — show who's requesting instead
+                 of asking them to retype their identity. */
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-700 p-3 text-sm dark:text-gray-200">
+                <p>{t("signed_in_with_google_message")}</p>
+                <p className="font-medium mt-1">
+                  {user?.name} · {user?.email}
+                </p>
               </div>
-
-              <div className="w-[50%]">
-                <label className="text-sm dark:text-gray-300">
-                  {t("last_name_label")}
-                </label>
-                <Field name="lastName">
-                  {({ field }: any) => (
-                    <InputText
-                      placeholder={t("last_name_label")}
-                      {...field}
-                      className="w-full border-2 text-sm border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
+            ) : (
+              <>
+                {/* First and Last Name */}
+                <div className="gap-4 flex w-[100%] justify-between">
+                  <div className="w-[50%]">
+                    <label className="text-sm dark:text-gray-300">
+                      {t("first_name_label")}
+                    </label>
+                    <Field name="firstName">
+                      {({ field }: any) => (
+                        <InputText
+                          placeholder={t("first_name_label")}
+                          {...field}
+                          className="w-full text-sm border-2 border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
+                        />
+                      )}
+                    </Field>
+                    <ErrorMessage
+                      name="firstName"
+                      component="small"
+                      className="p-error text-sm"
                     />
-                  )}
-                </Field>
-                <ErrorMessage
-                  name="lastName"
-                  component="small"
-                  className="p-error text-sm"
-                />
-              </div>
-            </div>
+                  </div>
 
-            {/* Email */}
-            <div>
-              <label className="text-sm dark:text-gray-300">
-                {t("email_label")}
-              </label>
-              <Field name="email">
-                {({ field }: any) => (
-                  <InputText
-                    placeholder={t("email_address_placeholder")}
-                    {...field}
-                    className="w-full border-2 text-sm border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
+                  <div className="w-[50%]">
+                    <label className="text-sm dark:text-gray-300">
+                      {t("last_name_label")}
+                    </label>
+                    <Field name="lastName">
+                      {({ field }: any) => (
+                        <InputText
+                          placeholder={t("last_name_label")}
+                          {...field}
+                          className="w-full border-2 text-sm border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
+                        />
+                      )}
+                    </Field>
+                    <ErrorMessage
+                      name="lastName"
+                      component="small"
+                      className="p-error text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="text-sm dark:text-gray-300">
+                    {t("email_label")}
+                  </label>
+                  <Field name="email">
+                    {({ field }: any) => (
+                      <InputText
+                        placeholder={t("email_address_placeholder")}
+                        {...field}
+                        className="w-full border-2 text-sm border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
+                      />
+                    )}
+                  </Field>
+                  <ErrorMessage
+                    name="email"
+                    component="small"
+                    className="p-error text-sm"
                   />
-                )}
-              </Field>
-              <ErrorMessage
-                name="email"
-                component="small"
-                className="p-error text-sm"
-              />
-            </div>
+                </div>
+              </>
+            )}
 
             {/* Phone Number */}
             <div>
@@ -178,56 +224,59 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
               />
             </div>
 
-            {/* Password */}
-            <div>
-              <label className="text-sm dark:text-gray-300">
-                {t("password_label")}
-              </label>
-              <Field name="password">
-                {({ field }: any) => (
-                  <Password
-                    {...field}
-                    inputClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                    panelClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                    placeholder={t("password")}
-                    toggleMask
-                    
-                    className="w-full text-sm border-2 border-gray-200 dark:border-gray-600 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    feedback={false}
+            {!isAuthenticated && (
+              <>
+                {/* Password */}
+                <div>
+                  <label className="text-sm dark:text-gray-300">
+                    {t("password_label")}
+                  </label>
+                  <Field name="password">
+                    {({ field }: any) => (
+                      <Password
+                        {...field}
+                        inputClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
+                        panelClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
+                        placeholder={t("password")}
+                        toggleMask
+                        className="w-full text-sm border-2 border-gray-200 dark:border-gray-600 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        feedback={false}
+                      />
+                    )}
+                  </Field>
+                  <ErrorMessage
+                    name="password"
+                    component="small"
+                    className="p-error text-sm"
                   />
-                )}
-              </Field>
-              <ErrorMessage
-                name="password"
-                component="small"
-                className="p-error text-sm"
-              />
-            </div>
+                </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label className="text-sm dark:text-gray-300">
-                {t("confirm_password_label")}
-              </label>
-              <Field name="confirmPassword">
-                {({ field }: any) => (
-                  <Password
-                    placeholder={t("confirm_password_label")}
-                    inputClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                    panelClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                    {...field}
-                    toggleMask
-                    className="w-full text-sm border-2 border-gray-200 dark:border-gray-600 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    feedback={false}
+                {/* Confirm Password */}
+                <div>
+                  <label className="text-sm dark:text-gray-300">
+                    {t("confirm_password_label")}
+                  </label>
+                  <Field name="confirmPassword">
+                    {({ field }: any) => (
+                      <Password
+                        placeholder={t("confirm_password_label")}
+                        inputClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
+                        panelClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
+                        {...field}
+                        toggleMask
+                        className="w-full text-sm border-2 border-gray-200 dark:border-gray-600 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        feedback={false}
+                      />
+                    )}
+                  </Field>
+                  <ErrorMessage
+                    name="confirmPassword"
+                    component="small"
+                    className="p-error text-sm"
                   />
-                )}
-              </Field>
-              <ErrorMessage
-                name="confirmPassword"
-                component="small"
-                className="p-error text-sm"
-              />
-            </div>
+                </div>
+              </>
+            )}
 
             {/* Terms & Conditions */}
             <div className="flex items-center gap-2 h-[40px]">

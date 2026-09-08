@@ -990,6 +990,8 @@
   "confirmPasswordRequired": "Confirm your password",
   "confirmPasswordMismatch": "Passwords must match",
   "termsRequired": "Accept terms to continue",
+  "you_are_now_a_rider_message": "You're now a rider! Open the Livreur tab to get started.",
+  "signed_in_with_google_message": "You're signed in with Google — no need to create a separate account.",
   "invalid_credentials": "Invalid credentials!",
   "Horrible": "Horrible",
   "Bad": "Bad",

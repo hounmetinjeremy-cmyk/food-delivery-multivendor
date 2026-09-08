@@ -18,7 +18,7 @@ export interface IAuthFormData {
   isPhoneExists?: boolean;
 }
 export interface ILoginWithGoogleProps {
-  googleLogin: () => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   handleChangePanel: (index: number) => void;
   handleFormChange: (name: string, value: string) => void;
   formData: IAuthFormData;

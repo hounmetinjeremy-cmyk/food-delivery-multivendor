@@ -80,17 +80,18 @@ export default function AuthModal({
   } = useAuth();
   const { showToast } = useToast();
   const t = useTranslations();
-  const {
-    GOOGLE_CLIENT_ID,
-    SKIP_EMAIL_VERIFICATION,
-    SKIP_MOBILE_VERIFICATION,
-  } = useConfig();
+  const { SKIP_EMAIL_VERIFICATION, SKIP_MOBILE_VERIFICATION } = useConfig();
 
   // Login With Google
-  const googleLogin = async () => {
+  // Uses @react-oauth/google's <GoogleLogin> button (login-with-google/index.tsx)
+  // instead of manually calling google.accounts.id.prompt(): Google's One Tap
+  // prompt triggered from a custom button is unreliable — it silently no-ops
+  // whenever FedCM/third-party cookies are restricted or One Tap is in its
+  // cooldown period, which is exactly what "Google sign-in doesn't work" was.
+  // A real, click-triggered Google button doesn't have those failure modes.
+  const googleLogin = async (idToken: string) => {
     try {
       setIsLoading(true);
-      const idToken = await getGoogleIdToken();
       const userData = await getGoogleUserInfo(idToken);
 
       // Also open a zego-api session with the same Google token, so the
@@ -144,89 +145,6 @@ export default function AuthModal({
       setIsLoading(false);
     }
   };
-
-  const getGoogleIdToken = () =>
-    new Promise<string>((resolve, reject) => {
-      const google = (window as Window & { google?: unknown }).google as
-        | {
-            accounts?: {
-              id?: {
-                cancel: () => void;
-                initialize: (options: Record<string, unknown>) => void;
-                prompt: (
-                  listener?: (notification: {
-                    isNotDisplayed?: () => boolean;
-                    isSkippedMoment?: () => boolean;
-                  }) => void,
-                ) => void;
-              };
-            };
-          }
-        | undefined;
-
-      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "not_found") {
-        reject(
-          new Error(
-            "Social login is not configured right now. Please use email and password.",
-          ),
-        );
-        return;
-      }
-
-      if (!google?.accounts?.id) {
-        reject(
-          new Error(
-            "Social login is not configured right now. Please use email and password.",
-          ),
-        );
-        return;
-      }
-
-      const googleAccountsId = google.accounts.id;
-
-      let isSettled = false;
-      const resolveOnce = (credential?: string) => {
-        if (isSettled) return;
-        isSettled = true;
-        googleAccountsId.cancel();
-        if (credential) {
-          resolve(credential);
-          return;
-        }
-        reject(
-          new Error(
-            "Your social sign-in did not return a valid token. Please try again.",
-          ),
-        );
-      };
-
-      const rejectOnce = (message: string) => {
-        if (isSettled) return;
-        isSettled = true;
-        googleAccountsId.cancel();
-        reject(new Error(message));
-      };
-
-      googleAccountsId.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        ux_mode: "popup",
-        callback: (response: { credential?: string }) =>
-          resolveOnce(response?.credential),
-      });
-
-      googleAccountsId.prompt((notification) => {
-        if (notification?.isNotDisplayed?.()) {
-          rejectOnce(
-            "Social login is not configured right now. Please use email and password.",
-          );
-          return;
-        }
-
-        if (notification?.isSkippedMoment?.()) {
-          rejectOnce("Google sign-in was cancelled. Please try again.");
-        }
-      });
-    });
 
   const getGoogleUserInfo = async (idToken: string) => {
     const [, payload] = idToken.split(".");
