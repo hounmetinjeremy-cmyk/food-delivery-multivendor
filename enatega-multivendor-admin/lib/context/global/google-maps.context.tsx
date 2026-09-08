@@ -1,34 +1,21 @@
 'use client';
 
 import React, { createContext } from 'react';
-import { useJsApiLoader } from '@react-google-maps/api';
-import {
-  IGoogleMapsContext,
-  IGoogleMapsProviderProps,
-} from '../../utils/interfaces';
+import { IGoogleMapsContext, IGoogleMapsProviderProps } from '../../utils/interfaces';
 
-export const GoogleMapsContext = createContext<IGoogleMapsContext>(
-  {} as IGoogleMapsContext
-);
+// Kept as "GoogleMapsContext" so every existing consumer keeps working
+// unchanged — internally it now backs the free Leaflet/OpenStreetMap map
+// stack instead of Google's, which needs no async script load, so
+// isLoaded is simply always true.
+export const GoogleMapsContext = createContext<IGoogleMapsContext>({
+  isLoaded: true,
+});
 
 export const GoogleMapsProvider: React.FC<IGoogleMapsProviderProps> = ({
-  apiKey,
-  libraries,
   children,
 }) => {
-  const { isLoaded: hookIsLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    libraries: libraries || ['places'],
-  });
-  const isLoaded = hookIsLoaded;
-
-  const value: IGoogleMapsContext = {
-    isLoaded,
-  };
-
   return (
-    <GoogleMapsContext.Provider value={value}>
+    <GoogleMapsContext.Provider value={{ isLoaded: true }}>
       {children}
     </GoogleMapsContext.Provider>
   );

@@ -1,6 +1,8 @@
-import { Libraries } from '@react-google-maps/api';
 import { ReactNode } from 'react';
 import { IGlobalComponentProps } from './global.interface';
+
+// Kept for API compatibility with the (now Leaflet-backed) GoogleMapsProvider.
+export type Libraries = string[];
 
 export interface IGoogleMapsLoaderComponentProps
   extends IGlobalComponentProps {}
@@ -47,24 +49,29 @@ export interface ILocation {
 export interface IPlaceSelectedOption {
   place_id: string;
   description: string;
-  matched_substrings: {
+  // Populated by zego-api's /maps/search endpoint (OpenStreetMap/Nominatim),
+  // which returns coordinates directly instead of requiring a separate
+  // geocode-by-place-id lookup the way Google Places did.
+  lat?: number;
+  lon?: number;
+  matched_substrings?: {
     length: number;
     offset: number;
   }[];
   structured_formatting: {
     main_text: string;
-    main_text_matched_substrings: {
+    main_text_matched_substrings?: {
       length: number;
       offset: number;
     }[];
     secondary_text: string;
   };
-  terms: {
+  terms?: {
     offset: number;
     value: string;
   }[];
-  types: string[];
-  reference: string;
+  types?: string[];
+  reference?: string;
 }
 
 export interface IUpdateRestaurantDeliveryZoneVariables {

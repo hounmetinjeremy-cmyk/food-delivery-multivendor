@@ -8,11 +8,9 @@ import {
   useQuery,
 } from '@apollo/client';
 import React, {
-  useCallback,
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { throttle } from '@/lib/utils/methods';
@@ -52,7 +50,6 @@ import {
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Circle, GoogleMap, Marker, Polygon } from '@react-google-maps/api';
 import parse from 'autosuggest-highlight/parse';
 import { AutoComplete, AutoCompleteSelectEvent } from 'primereact/autocomplete';
 
@@ -64,19 +61,16 @@ import useLocation from '@/lib/hooks/useLocation';
 import { RestaurantsContext } from '@/lib/context/super-admin/restaurants.context';
 import calculateZoom from '@/lib/utils/methods/zoom-calculator';
 import { useTranslations } from 'next-intl';
-import { useTheme } from 'next-themes';
-import { darkMapStyle } from '@/lib/utils/map-style/mapStyle';
-
-const autocompleteService: {
-  current: google.maps.places.AutocompleteService | null;
-} = { current: null };
+import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import { searchPlaces } from '@/lib/api/google-maps';
+import EditableZoneMap from '@/lib/ui/useable-components/leaflet-zone-map/dynamic';
 
 const CustomGoogleMapsLocationBounds: React.FC<
   ICustomGoogleMapsLocationBoundsComponentProps
 > = ({ onStepChange, hideControls, height }) => {
   // Hooks
   const t = useTranslations();
-  const { theme } = useTheme();
+  const { SERVER_URL } = useConfiguration();
 
   // Context
   const { restaurantsContextData, onSetRestaurantsContextData } =
@@ -105,10 +99,6 @@ const CustomGoogleMapsLocationBounds: React.FC<
     useState<IPlaceSelectedOption | null>(null);
   const [search, setSearch] = useState<string>('');
   const [zones, setZones] = useState<IZoneResponse[]>([]);
-
-  // Ref
-  const polygonRef = useRef<google.maps.Polygon | null>(null);
-  const listenersRef = useRef<google.maps.MapsEventListener[]>([]);
 
   //Hooks
   const { getCurrentLocation } = useLocation();
@@ -162,10 +152,14 @@ const CustomGoogleMapsLocationBounds: React.FC<
   }, [distance]);
   const fetch = React.useMemo(
     () =>
-      throttle((request, callback) => {
-        autocompleteService?.current?.getPlacePredictions(request, callback);
-      }, 1500),
-    []
+      throttle(
+        async (request: { input: string }, callback: (results: IPlaceSelectedOption[]) => void) => {
+          const results = await searchPlaces(SERVER_URL ?? '', request.input);
+          callback(results as IPlaceSelectedOption[]);
+        },
+        1500
+      ),
+    [SERVER_URL]
   );
 
   // API Handlers
@@ -337,49 +331,26 @@ const CustomGoogleMapsLocationBounds: React.FC<
     event: AutoCompleteSelectEvent
   ) => {
     const selectedOption = event?.value as IPlaceSelectedOption;
-    if (selectedOption) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode(
-        { placeId: selectedOption.place_id },
-        (results: google.maps.GeocoderResult[] | null) => {
-          if (
-            results &&
-            results[0] &&
-            results[0]?.geometry &&
-            results[0]?.geometry.location
-          ) {
-            const location = results[0]?.geometry?.location;
+    if (selectedOption && selectedOption.lat != null && selectedOption.lon != null) {
+      const location = { lat: selectedOption.lat, lng: selectedOption.lon };
 
-            onSetRestaurantsContextData({
-              ...restaurantsContextData,
-              restaurant: {
-                ...restaurantsContextData?.restaurant,
-                _id: restaurantsContextData?.restaurant?._id ?? null,
-                autoCompleteAddress: selectedOption.description,
-              },
-            });
+      onSetRestaurantsContextData({
+        ...restaurantsContextData,
+        restaurant: {
+          ...restaurantsContextData?.restaurant,
+          _id: restaurantsContextData?.restaurant?._id ?? null,
+          autoCompleteAddress: selectedOption.description,
+        },
+      });
 
-            setCenter({
-              lat: location?.lat() ?? 0,
-              lng: location?.lng() ?? 0,
-            });
-            setMarker({
-              lat: location?.lat() ?? 0,
-              lng: location?.lng() ?? 0,
-            });
-
-            setInputValue(selectedOption?.description ?? '');
-          }
-        }
-      );
+      setCenter(location);
+      setMarker(location);
+      setInputValue(selectedOption?.description ?? '');
       setSelectedPlaceObject(selectedOption);
     }
   };
-  const onClickGoogleMaps = (e: google.maps.MapMouseEvent) => {
-    setPath([
-      ...path,
-      { lat: e?.latLng?.lat() ?? 0, lng: e?.latLng?.lng() ?? 0 },
-    ]);
+  const onClickGoogleMaps = (lat: number, lng: number) => {
+    setPath([...path, { lat, lng }]);
   };
   const getPolygonPathFromCircle = (center: ILocationPoint, radius: number) => {
     try {
@@ -447,57 +418,21 @@ const CustomGoogleMapsLocationBounds: React.FC<
     setInputValue(data?.deliveryAddress ?? '');
     setSearch(data?.deliveryAddress ?? '');
   };
-  const onEdit = useCallback(() => {
-    if (polygonRef.current) {
-      const nextPath = polygonRef?.current
-        .getPath()
-        .getArray()
-        .map((latLng) => {
-          return { lat: latLng.lat(), lng: latLng.lng() };
-        });
-
-      setPath(nextPath);
-
-      // Calculate new center based on polygon vertices
-      const newCenter = nextPath.reduce(
-        (acc, point) => ({
-          lat: acc.lat + point.lat / nextPath.length,
-          lng: acc.lng + point.lng / nextPath.length,
-        }),
-        { lat: 0, lng: 0 }
-      );
-
-      setCenter(newCenter);
-      setMarker(newCenter);
-    }
-  }, [setPath, setCenter, setMarker]);
-  const onLoadPolygon = useCallback(
-    (polygon: google.maps.Polygon) => {
-      if (!polygon) return;
-
-      polygonRef.current = polygon;
-      const path = polygon?.getPath();
-      listenersRef?.current?.push(
-        path?.addListener('set_at', onEdit),
-        path?.addListener('insert_at', onEdit),
-        path?.addListener('remove_at', onEdit)
-      );
-    },
-    [onEdit]
-  );
-  const onUnmount = useCallback(() => {
-    listenersRef?.current?.forEach((lis) => lis?.remove());
-    polygonRef.current = null;
-  }, []);
-  const removeMarker = () => {
-    setMarker({ lat: 0, lng: 0 });
+  const onVertexDragEnd = (index: number, lat: number, lng: number) => {
+    const nextPath = path.map((point, i) => (i === index ? { lat, lng } : point));
+    setPath(nextPath);
+    const newCenter = nextPath.reduce(
+      (acc, point) => ({
+        lat: acc.lat + point.lat / nextPath.length,
+        lng: acc.lng + point.lng / nextPath.length,
+      }),
+      { lat: 0, lng: 0 }
+    );
+    setCenter(newCenter);
+    setMarker(newCenter);
   };
-  const onDragEnd = (mapMouseEvent: google.maps.MapMouseEvent) => {
-    const newLatLng = {
-      lat: mapMouseEvent?.latLng?.lat() ?? 0,
-      lng: mapMouseEvent?.latLng?.lng() ?? 0,
-    };
-
+  const onCenterDragEnd = (lat: number, lng: number) => {
+    const newLatLng = { lat, lng };
     setMarker(newLatLng);
     setCenter(newLatLng);
 
@@ -559,14 +494,6 @@ const CustomGoogleMapsLocationBounds: React.FC<
   // Use Effects
   useEffect(() => {
     let active = true;
-
-    if (!autocompleteService.current && window.google) {
-      autocompleteService.current =
-        new window.google.maps.places.AutocompleteService();
-    }
-    if (!autocompleteService.current) {
-      return undefined;
-    }
 
     if (search === '') {
       setOptions(selectedPlaceObject ? [selectedPlaceObject] : []);
@@ -703,95 +630,27 @@ const CustomGoogleMapsLocationBounds: React.FC<
             </div>
           )}
 
-          <GoogleMap
-            mapContainerStyle={{
-              height: '100%',
-              width: '100%',
-              borderRadius: 10,
-              marginBottom: '20px',
-            }}
-            id="google-map"
-            zoom={zoom}
+          <EditableZoneMap
+            mode={deliveryZoneType === 'radius' ? 'radius' : deliveryZoneType === 'point' ? 'point' : 'polygon'}
             center={center}
-            options={{
-              disableDefaultUI: true,
-              zoomControl: true,
-              streetViewControl: false,
-              mapTypeControl: !hideControls,
-              fullscreenControl: !hideControls,
-              draggable: !hideControls,
-              styles: theme === 'dark' ? darkMapStyle : null,
-            }}
-            onClick={
-              deliveryZoneType === 'point' ? onClickGoogleMaps : undefined
-            }
-          >
-            {zones.map(
-              (zone) =>
-                zone.location && (
-                  // Zone boundary polygon
-                  <Polygon
-                    onClick={
-                      deliveryZoneType === 'point'
-                        ? onClickGoogleMaps
-                        : undefined
-                    }
-                    key={zone._id}
-                    paths={zone.location.coordinates[0].map(
-                      (coords: number[]) => ({ lat: coords[1], lng: coords[0] })
-                    )}
-                    options={{
-                      strokeColor: 'blue',
-                      strokeOpacity: 0.8,
-                      strokeWeight: 2,
-                      fillColor: 'lightblue',
-                      fillOpacity: 0.3,
-                    }}
-                  />
-                )
-            )}
-            <Polygon
-              editable={!hideControls}
-              draggable={!hideControls}
-              visible={
-                deliveryZoneType === 'polygon' || deliveryZoneType === 'point'
-              }
-              paths={path}
-              options={{
-                strokeColor: 'black',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#000000',
-                fillOpacity: 0.35,
-              }}
-              onMouseUp={onEdit}
-              onDragEnd={onEdit}
-              onLoad={onLoadPolygon}
-              onUnmount={onUnmount}
-            />
-
-            <Circle
-              center={center}
-              radius={radiusInMeter}
-              visible={deliveryZoneType === 'radius'}
-              options={{
-                fillColor: 'black',
-                fillOpacity: 0.2,
-                strokeColor: 'black',
-                strokeOpacity: 1,
-                strokeWeight: 2,
-              }}
-            />
-
-            {marker && (
-              <Marker
-                position={marker}
-                draggable={!hideControls}
-                onRightClick={removeMarker}
-                onDragEnd={onDragEnd}
-              />
-            )}
-          </GoogleMap>
+            path={path}
+            radiusMeters={radiusInMeter}
+            zoom={zoom}
+            height="100%"
+            onMapClick={deliveryZoneType === 'point' ? onClickGoogleMaps : undefined}
+            onVertexDragEnd={onVertexDragEnd}
+            showCenterMarker={!!marker}
+            onCenterDragEnd={!hideControls ? onCenterDragEnd : undefined}
+            referenceZones={zones
+              .filter((zone) => zone.location)
+              .map((zone) => ({
+                id: zone._id,
+                path: zone.location!.coordinates[0].map((coords: number[]) => ({
+                  lat: coords[1],
+                  lng: coords[0],
+                })),
+              }))}
+          />
         </div>
       </div>
 

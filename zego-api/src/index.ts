@@ -1,6 +1,7 @@
 import { createYoga } from 'graphql-yoga'
 import { createContext, type Env, type GraphQLContext } from './context'
 import { schema } from './schema'
+import { handlePlaceSearch, handleReverseGeocode } from './maps'
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -17,6 +18,13 @@ export default {
           'cache-control': 'public, max-age=31536000, immutable'
         }
       })
+    }
+
+    if (url.pathname === '/maps/reverse-geocode') {
+      return handleReverseGeocode(request)
+    }
+    if (url.pathname === '/maps/search') {
+      return handlePlaceSearch(request)
     }
 
     const yoga = createYoga<GraphQLContext>({

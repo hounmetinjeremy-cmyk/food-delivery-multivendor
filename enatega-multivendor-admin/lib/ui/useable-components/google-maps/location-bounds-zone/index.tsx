@@ -2,13 +2,10 @@
 
 // Core imports
 import React, {
-  useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
-import { GoogleMap, Polygon } from '@react-google-maps/api';
 import parse from 'autosuggest-highlight/parse';
 import { throttle } from '@/lib/utils/methods';
 
@@ -40,20 +37,16 @@ import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';
 import CustomShape from '../shapes';
 import { DEFAULT_CENTER, DEFAULT_POLYGON } from '@/lib/utils/constants';
 import { useTranslations } from 'next-intl';
-import { darkMapStyle } from '@/lib/utils/map-style/mapStyle';
-import { useTheme } from 'next-themes';
-
-const autocompleteService: {
-  current: google.maps.places.AutocompleteService | null;
-} = { current: null };
+import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import { searchPlaces } from '@/lib/api/google-maps';
+import EditableZoneMap from '@/lib/ui/useable-components/leaflet-zone-map/dynamic';
 
 const CustomGoogleMapsLocationZoneBounds: React.FC<
   IZoneCustomGoogleMapsBoundComponentProps
 > = ({ _path, onSetZoneCoordinates }) => {
   // Hooks
   const t = useTranslations();
-  const { theme } = useTheme();
-
+  const { SERVER_URL } = useConfiguration();
 
   // Context
   const googleMapsContext = useContext(GoogleMapsContext);
@@ -75,17 +68,16 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
     lng: number;
   } | null>(null);
 
-  // Ref
-  const polygonRef = useRef<google.maps.Polygon | null>(null);
-  const listenersRef = useRef<google.maps.MapsEventListener[]>([]);
-  const mapRef = useRef<google.maps.Map | null>(null);
-
   const fetch = React.useMemo(
     () =>
-      throttle((request, callback) => {
-        autocompleteService?.current?.getPlacePredictions(request, callback);
-      }, 1500),
-    []
+      throttle(
+        async (request: { input: string }, callback: (results: IPlaceSelectedOption[]) => void) => {
+          const results = await searchPlaces(SERVER_URL ?? '', request.input);
+          callback(results as IPlaceSelectedOption[]);
+        },
+        1500
+      ),
+    [SERVER_URL]
   );
 
   // Helper to create a polygon around a point
@@ -110,67 +102,45 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
     setInputValue(value);
   };
 
-  const focusZone = (zonePath: ILocationPoint[]) => {
-    if (!mapRef.current || !zonePath.length) return;
-    const bounds = new window.google.maps.LatLngBounds();
-    zonePath.forEach((point) => bounds.extend(point));
-    if (zonePath.length === 1) {
-      mapRef.current.setCenter(zonePath[0]);
-      mapRef.current.setZoom(17);
-    } else {
-      mapRef.current.fitBounds(bounds);
-    }
-  };
-
   const onHandlerAutoCompleteSelectionChange = (
     event: AutoCompleteSelectEvent
   ) => {
     const selectedOption = event?.value as IPlaceSelectedOption;
-    if (selectedOption) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode(
-        { placeId: selectedOption.place_id },
-        (results: google.maps.GeocoderResult[] | null) => {
-          if (
-            results &&
-            results[0] &&
-            results[0]?.geometry &&
-            results[0]?.geometry.location
-          ) {
-            const location = results[0]?.geometry?.location;
-            const centerPoint = {
-              lat: location?.lat() ?? 0,
-              lng: location?.lng() ?? 0,
-            };
-            setCenter(centerPoint);
-            setLastSelectedLocation(centerPoint);
+    if (selectedOption && selectedOption.lat != null && selectedOption.lon != null) {
+      const centerPoint = { lat: selectedOption.lat, lng: selectedOption.lon };
+      setCenter(centerPoint);
+      setLastSelectedLocation(centerPoint);
 
-            let newPath: ILocationPoint[];
-            if (deliveryZoneType === 'polygon') {
-              newPath = createPolygonAroundPoint(centerPoint);
-              setPath(newPath);
-            } else if (deliveryZoneType === 'point') {
-              newPath = [centerPoint];
-              setPath(newPath);
-            } else {
-              newPath = [];
-            }
+      if (deliveryZoneType === 'polygon') {
+        setPath(createPolygonAroundPoint(centerPoint));
+      } else if (deliveryZoneType === 'point') {
+        setPath([centerPoint]);
+      }
 
-            setInputValue(selectedOption.description);
-
-            setTimeout(() => focusZone(newPath), 200);
-          }
-        }
-      );
+      setInputValue(selectedOption.description);
       setSelectedPlaceObject(selectedOption);
     }
   };
 
-  const onClickGoogleMaps = (e: google.maps.MapMouseEvent) => {
-    setPath([
-      ...path,
-      { lat: e?.latLng?.lat() ?? 0, lng: e?.latLng?.lng() ?? 0 },
-    ]);
+  const onMapClick = (lat: number, lng: number) => {
+    if (deliveryZoneType === 'point') {
+      setPath([{ lat, lng }]);
+    } else {
+      setPath([...path, { lat, lng }]);
+    }
+  };
+
+  const onVertexDragEnd = (index: number, lat: number, lng: number) => {
+    const nextPath = path.map((point, i) => (i === index ? { lat, lng } : point));
+    setPath(nextPath);
+    const newCenter = nextPath.reduce(
+      (acc, point) => ({
+        lat: acc.lat + point.lat / nextPath.length,
+        lng: acc.lng + point.lng / nextPath.length,
+      }),
+      { lat: 0, lng: 0 }
+    );
+    setCenter(newCenter);
   };
 
   const onSetCenterAndPolygon = () => {
@@ -186,52 +156,6 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
     }
   };
 
-  const onEdit = useCallback(() => {
-    if (polygonRef.current) {
-      const nextPath = polygonRef?.current
-        .getPath()
-        .getArray()
-        .map((latLng) => {
-          return { lat: latLng.lat(), lng: latLng.lng() };
-        });
-
-      setPath(nextPath);
-
-      // Calculate new center based on polygon vertices
-      const newCenter = nextPath.reduce(
-        (acc, point) => ({
-          lat: acc.lat + point.lat / nextPath.length,
-          lng: acc.lng + point.lng / nextPath.length,
-        }),
-        { lat: 0, lng: 0 }
-      );
-
-      setCenter(newCenter);
-    }
-  }, [setPath, setCenter]);
-
-  const onLoadPolygon = useCallback(
-    (polygon: google.maps.Polygon | null) => {
-      if (!polygon) {
-        return;
-      }
-
-      polygonRef.current = polygon;
-      const path = polygon?.getPath();
-      listenersRef?.current?.push(
-        path?.addListener('set_at', onEdit),
-        path?.addListener('insert_at', onEdit),
-        path?.addListener('remove_at', onEdit)
-      );
-    },
-    [onEdit]
-  );
-
-  const onUnmount = useCallback(() => {
-    listenersRef?.current?.forEach((lis) => lis?.remove());
-    polygonRef.current = null;
-  }, [deliveryZoneType]);
-
   // Use Effects
   useEffect(() => {
     if (!isMounted) return;
@@ -239,14 +163,6 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
   }, [path, isMounted]);
 
   useEffect(() => {
-    if (!autocompleteService.current && window.google) {
-      autocompleteService.current =
-        new window.google.maps.places.AutocompleteService();
-    }
-    if (!autocompleteService.current) {
-      return;
-    }
-
     if (search === '') {
       setOptions(selectedPlaceObject ? [selectedPlaceObject] : []);
       return;
@@ -262,10 +178,6 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
       }
       setOptions(newOptions);
     });
-
-    return () => {
-      autocompleteService.current = null;
-    };
   }, [selectedPlaceObject, search, fetch]);
 
   useEffect(() => {
@@ -365,52 +277,15 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
           </div>
 
           {googleMapsContext?.isLoaded && (
-            <GoogleMap
-              key={deliveryZoneType}
-              mapContainerStyle={{
-                height: '100%',
-                width: '100%',
-                borderRadius: 10,
-                marginBottom: '20px',
-              }}
-              id="google-map"
-              zoom={14}
+            <EditableZoneMap
+              mode={deliveryZoneType === 'point' ? 'point' : 'polygon'}
               center={center}
-              options={{
-                disableDefaultUI: true,
-                zoomControl: true,
-                streetViewControl: false,
-                mapTypeControl: false,
-                fullscreenControl: false,
-                 styles: theme === 'dark' ? darkMapStyle : null,
-              }}
-              onClick={onClickGoogleMaps}
-              onLoad={(map) => {
-                mapRef.current = map;
-              }}
-              
-              
-            >
-              {path.length > 0 && (
-                <Polygon
-                  key={'google-map-polygon'}
-                  editable
-                  draggable
-                  paths={path}
-                  options={{
-                    strokeColor: 'black',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: '#000000',
-                    fillOpacity: 0.35,
-                  }}
-                  onMouseUp={onEdit}
-                  onDragEnd={onEdit}
-                  onLoad={onLoadPolygon}
-                  onUnmount={onUnmount}
-                />
-              )}
-            </GoogleMap>
+              path={path}
+              zoom={14}
+              onMapClick={onMapClick}
+              onVertexDragEnd={onVertexDragEnd}
+              onPointDragEnd={(lat, lng) => setPath([{ lat, lng }])}
+            />
           )}
         </div>
       </div>
@@ -421,23 +296,11 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
         onClick={(val: string) => {
           setDeliveryZoneType(val);
           if (lastSelectedLocation) {
-            let newPath: ILocationPoint[];
             if (val === 'polygon') {
-              newPath = createPolygonAroundPoint(lastSelectedLocation);
-              setPath(newPath);
+              setPath(createPolygonAroundPoint(lastSelectedLocation));
             } else if (val === 'point') {
-              newPath = [lastSelectedLocation];
-              setPath(newPath);
+              setPath([lastSelectedLocation]);
             }
-            setTimeout(
-              () =>
-                focusZone(
-                  val === 'polygon'
-                    ? createPolygonAroundPoint(lastSelectedLocation)
-                    : [lastSelectedLocation]
-                ),
-              200
-            );
           } else {
             switch (val) {
               case 'polygon':
