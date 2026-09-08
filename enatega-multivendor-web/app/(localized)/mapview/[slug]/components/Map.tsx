@@ -1,12 +1,8 @@
 "use client";
-import { FC, useEffect, useMemo, useRef } from "react";
-import { GoogleMap, Marker , useLoadScript } from "@react-google-maps/api";
-import Loader from "./Loader";
-import DisplayError from "./DisplayError";
+import { FC, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import './map.css'
-import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
-import { useTheme } from "@/lib/providers/ThemeProvider";
+import LeafletMap from "@/lib/ui/useable-components/leaflet-map/dynamic";
+import type { ILeafletMapMarker } from "@/lib/ui/useable-components/leaflet-map";
 
 interface MapProps {
   apiKey: string;
@@ -16,21 +12,16 @@ interface MapProps {
     location: { coordinates: [number, number] };
     image: string;
     address: string;
+    slug?: string;
+    shopType?: string;
   }>;
   center: { lat: number; lng: number } | null;
 }
 
-const Map: FC<MapProps> = ({ apiKey, data, center }) => {
+const Map: FC<MapProps> = ({ data, center }) => {
   const router = useRouter();
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const { theme } = useTheme();
-
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: apiKey,
-  });
 
   const defaultCenter = useMemo(() => {
-    
     if (data.length > 0) {
       const [lng, lat] = data[0].location.coordinates;
       return { lat: Number(lat), lng: Number(lng) };
@@ -38,129 +29,27 @@ const Map: FC<MapProps> = ({ apiKey, data, center }) => {
     return { lat: 33.6844, lng: 73.0479 }; // Default to Islamabad
   }, [data]);
 
+  const getRedirectUrl = (item: MapProps["data"][number]) =>
+    `/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item?.slug}/${item._id}`;
 
-  const getRedirectUrl = (item) => {
-    return `/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item?.slug}/${item._id}`;
-  };
+  const markers: ILeafletMapMarker[] = data
+    .filter((restaurant) => restaurant.location?.coordinates?.length === 2)
+    .map((restaurant) => ({
+      lat: Number(restaurant.location.coordinates[1]),
+      lng: Number(restaurant.location.coordinates[0]),
+      label: restaurant.name,
+      iconUrl: restaurant.image,
+      iconSize: [50, 50],
+      onClick: () => router.push(getRedirectUrl(restaurant)),
+    }));
 
-  useEffect(() => {
-    if (center && mapRef.current) {
-      mapRef.current.panTo(center); 
-    }
-  }, [center]);
-
-  return !isLoaded ? (
-    <Loader message="Loading Map" />
-  ) : loadError ? (
-    <DisplayError />
-  ) : (
-    <>
-    {/* Light mode */}
-    <GoogleMap
-      mapContainerClassName="block dark:hidden"
-      zoom={12} 
+  return (
+    <LeafletMap
+      height="100vh"
       center={center || defaultCenter}
-      mapContainerStyle={{ width: "100%", height: "100vh" }}
-      options={{
-        zoomControl: false,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        cameraControl: false,
-        gestureHandling: "auto",
-      }}
-      onLoad={(map) => {
-        mapRef.current = map
-      }} 
-    >
-      {data.map((restaurant, index) => {
-        const { coordinates } = restaurant.location;
-        if (!coordinates || coordinates.length !== 2) {
-          console.warn(`Invalid coordinates for restaurant: ${restaurant.name}`);
-          return null;
-        }
-
-        return (
-          <Marker
-            key={index}
-            position={{
-              lat: Number(coordinates[1]),
-              lng: Number(coordinates[0]),
-            }}
-            icon={{
-              url: restaurant.image,
-              scaledSize: new window.google.maps.Size(50, 50),
-            }}
-            label={{
-              text: restaurant.name,
-              color: "#333",
-              fontSize: "12px",
-              fontWeight: "bold",
-              className: "map-view-marker-label",
-            }}
-            title={restaurant.name}
-            onClick={() => router.push(getRedirectUrl(restaurant))}
-
-          >
-          </Marker>
-        );
-      })}
-    </GoogleMap>
-
-    {/* Dark mode */}
-    <GoogleMap
-      mapContainerClassName="hidden dark:block"
-      zoom={12} 
-      center={center || defaultCenter}
-      mapContainerStyle={{ width: "100%", height: "100vh" }}
-      options={{
-        zoomControl: false, // Disable default zoom controls
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        cameraControl: false,
-        gestureHandling: "auto",
-        styles: theme === "dark" ? darkMapStyle : null,
-        disableDefaultUI: true,
-      }}
-      onLoad={(map) => {
-        mapRef.current = map
-      }} 
-    >
-      {data.map((restaurant, index) => {
-        const { coordinates } = restaurant.location;
-        if (!coordinates || coordinates.length !== 2) {
-          console.warn(`Invalid coordinates for restaurant: ${restaurant.name}`);
-          return null;
-        }
-
-        return (
-          <Marker
-            key={index}
-            position={{
-              lat: Number(coordinates[1]),
-              lng: Number(coordinates[0]),
-            }}
-            icon={{
-              url: restaurant.image,
-              scaledSize: new window.google.maps.Size(50, 50),
-            }}
-            label={{
-              text: restaurant.name,
-              color: "#333",
-              fontSize: "12px",
-              fontWeight: "bold",
-              className: "map-view-marker-label",
-            }}
-            title={restaurant.name}
-            onClick={() => router.push(getRedirectUrl(restaurant))}
-
-          >
-          </Marker>
-        );
-      })}
-    </GoogleMap>
-    </>
+      zoom={12}
+      markers={markers}
+    />
   );
 };
 

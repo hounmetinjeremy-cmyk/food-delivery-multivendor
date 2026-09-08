@@ -7,7 +7,7 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ApolloCache,
   ApolloError,
@@ -17,12 +17,7 @@ import {
 import { Message } from "primereact/message";
 import { useRouter } from "next/navigation";
 
-import {
-  GoogleMap,
-  DirectionsService,
-  DirectionsRenderer,
-  Marker,
-} from "@react-google-maps/api";
+import LeafletMap from "@/lib/ui/useable-components/leaflet-map/dynamic";
 
 // Componentns
 import { PaddingContainer } from "@/lib/ui/useable-components/containers";
@@ -74,8 +69,6 @@ import RestIcon from "../../../../../assets/rest_icon.png";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import Image from '@/lib/ui/useable-components/safe-image';
 import { useTranslations } from "next-intl";
-import { useTheme } from "@/lib/providers/ThemeProvider";
-import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
 import { GET_TIPS } from "@/lib/api/graphql/queries/tipping";
 
 //Coupon localStorage Keys
@@ -101,9 +94,6 @@ export default function OrderCheckoutScreen() {
     PAYMENT_METHOD_LIST[0].value,
   );
   const [taxValue, setTaxValue] = useState();
-  const [directions, setDirections] =
-    useState<google.maps.DirectionsResult | null>(null);
-  const [isCheckingCache, setIsCheckingCache] = useState(true);
 
   // Coupon
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -351,12 +341,10 @@ export default function OrderCheckoutScreen() {
     lat: Number(userAddress?.location?.coordinates?.[1]) || 0,
     lng: Number(userAddress?.location?.coordinates?.[0]) || 0,
   };
-  const store_user_location_cache_key = `${origin?.lat},${origin?.lng}_${destination?.lat},${destination?.lng}`;
 
   const [orderInstructions, setOrderInstructions] = useState<string | null>(
     null,
   );
-  const { theme } = useTheme();
 
   // Initialize on client
   useEffect(() => {
@@ -441,23 +429,6 @@ export default function OrderCheckoutScreen() {
     }
   }, []);
 
-  const onInitDirectionCacheSet = () => {
-    try {
-      const stored_direction = onUseLocalStorage(
-        "get",
-        store_user_location_cache_key,
-      );
-      if (stored_direction) {
-        setDirections(JSON.parse(stored_direction));
-      } else {
-        setDirections(null);
-      }
-      setIsCheckingCache(false); // done checking
-    } catch (err) {
-      setDirections(null);
-      setIsCheckingCache(false);
-    }
-  };
   const onInitDeliveryCharges = () => {
     const latOrigin =
       Number(finalRestaurantData?.restaurant?.location?.coordinates?.[1]) || 0;
@@ -890,25 +861,6 @@ export default function OrderCheckoutScreen() {
     return total.toFixed(2);
   }
 
-  /*
-   Use Callbacks
-  */
-  const directionsCallback = useCallback(
-    (result: google.maps.DirectionsResult | null, status: string) => {
-      if (status === "OK" && result) {
-        setDirections(result);
-        onUseLocalStorage(
-          "save",
-          store_user_location_cache_key,
-          JSON.stringify(result),
-        );
-      } else {
-        console.error("Directions request failed due to", status);
-      }
-    },
-    [],
-  );
-
   // Filter PAYMENT_METHOD_LIST based on stripeDetailsSubmitted
   const filteredPaymentMethods = !finalRestaurantData?.restaurant
     ?.stripeDetailsSubmitted
@@ -922,74 +874,26 @@ export default function OrderCheckoutScreen() {
     }
   }, [finalRestaurantData]);
 
-  useEffect(() => {
-    onInitDirectionCacheSet();
-  }, [store_user_location_cache_key]);
-
   return (
     <>
       {/* <!-- Header with map and navigation --> */}
       <div className="relative">
         {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={{
-              width: "100%",
-              height: "35vh",
-            }}
-            options={{
-              styles: theme === "dark" ? darkMapStyle : null,
-              disableDefaultUI: true,
-            }}
-            center={{
-              lat: 24.8607, // Example: Karachi
-              lng: 67.0011,
-            }}
+          <LeafletMap
+            height="35vh"
+            center={origin.lat && origin.lng ? origin : destination}
             zoom={13}
-          >
-            {/* Custom Origin Marker */}
-            <Marker
-              position={origin}
-              icon={{
-                url: RestIcon.src, // Replace with your icon path or external URL
-                scaledSize: new window.google.maps.Size(40, 40),
-              }}
-            />
-
-            {/* Custom Destination Marker */}
-            <Marker
-              position={destination}
-              icon={{
-                url: HomeIcon.src, // Replace with your icon path or external URL
-                scaledSize: new window.google.maps.Size(40, 40),
-              }}
-            />
-
-            {!directions && !isCheckingCache && (
-              <DirectionsService
-                options={{
-                  destination,
-                  origin,
-                  travelMode: google.maps.TravelMode.DRIVING,
-                }}
-                callback={directionsCallback}
-              />
-            )}
-            {directions && (
-              <DirectionsRenderer
-                directions={directions}
-                options={{
-                  directions,
-                  suppressMarkers: true, // Hide default markers
-                  polylineOptions: {
-                    strokeColor: "#5AC12F", // blue line
-                    strokeOpacity: 0.8,
-                    strokeWeight: 3, // thickness
-                    zIndex: 10,
-                  },
-                }}
-              />
-            )}
-          </GoogleMap>
+            fitToContent
+            markers={[
+              { lat: origin.lat, lng: origin.lng, iconUrl: RestIcon.src },
+              { lat: destination.lat, lng: destination.lng, iconUrl: HomeIcon.src },
+            ]}
+            polyline={
+              origin.lat && origin.lng && destination.lat && destination.lng
+                ? [origin, destination]
+                : undefined
+            }
+          />
         ) : (
           <>
             <Image

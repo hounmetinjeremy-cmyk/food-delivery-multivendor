@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   setUserAddress: vi.fn(),
   getCurrentLocation: vi.fn(),
+  searchPlaces: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -40,10 +41,16 @@ vi.mock("@/lib/hooks/useLocation", () => ({
 vi.mock("@/lib/utils/methods/local-storage", () => ({
   onUseLocalStorage: mocks.save,
 }));
+vi.mock("@/lib/api/google-maps", () => ({
+  searchPlaces: mocks.searchPlaces,
+}));
 
 const prediction = {
   description: "Lahore, Pakistan",
   place_id: "lahore",
+  lat: 31.52,
+  lon: 74.35,
+  structured_formatting: { main_text: "Lahore", secondary_text: "Pakistan" },
 };
 
 describe("LandingCitySearch", () => {
@@ -51,26 +58,7 @@ describe("LandingCitySearch", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    window.google = {
-      maps: {
-        places: {
-          PlacesServiceStatus: { OK: "OK" },
-          AutocompleteService: class {
-            getPlacePredictions(_request, callback) {
-              callback([prediction], "OK");
-            }
-          },
-        },
-        Geocoder: class {
-          geocode(_request, callback) {
-            callback(
-              [{ geometry: { location: { lat: () => 31.52, lng: () => 74.35 } } }],
-              "OK",
-            );
-          }
-        },
-      },
-    } as typeof window.google;
+    mocks.searchPlaces.mockResolvedValue([prediction]);
   });
 
   it("supports keyboard selection, clearing, persistence, and discovery routing", async () => {

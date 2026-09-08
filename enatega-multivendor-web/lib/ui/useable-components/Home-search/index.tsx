@@ -11,6 +11,7 @@ import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import { useTranslations } from "next-intl";
 import { FiMapPin } from "react-icons/fi";
+import { searchPlaces, type IPlaceSearchResult } from "@/lib/api/google-maps";
 
 const CitySearch: React.FC = () => {
   // Ref
@@ -26,86 +27,56 @@ const CitySearch: React.FC = () => {
 
   // States
   const [cityName, setCityName] = useState<string>("");
-  const [suggestions, setSuggestions] = useState<
-    google.maps.places.AutocompletePrediction[]
-  >([]);
+  const [suggestions, setSuggestions] = useState<IPlaceSearchResult[]>([]);
   const debouncedCityName = useDebounce(cityName, 500);
-
-  // Handlers
-  const handleSelect = (placeId: string, description: string) => {
-    if (!window.google || !isLoaded) return;
-
-    const geocoder = new window.google.maps.Geocoder();
-
-    // Resolve the place to coordinates with the Geocoder instead of Places
-    // getDetails. Geocoding by placeId only returns geometry/address and is
-    // billed under the cheaper Geocoding SKU — it never triggers Places
-    // Contact or Atmosphere Data charges. We only need the lat/lng here.
-    geocoder.geocode({ placeId }, (results, status) => {
-      if (
-        status === window.google.maps.GeocoderStatus.OK &&
-        results?.[0]?.geometry?.location
-      ) {
-        const latitude = results[0].geometry.location.lat();
-        const longitude = results[0].geometry.location.lng();
-        console.log("longitude and latitude", longitude, latitude);
-        console.log("description:", description);
-        onUseLocalStorage(
-          "save",
-          USER_CURRENT_LOCATION_LS_KEY,
-          JSON.stringify({
-            label: t("Address"),
-            location: {
-              coordinates: [longitude, latitude],
-            },
-            _id: "",
-
-            deliveryAddress: description,
-          }),
-        );
-
-        setUserAddress({
-          _id: "",
-          label: t("Address"),
-          location: {
-            coordinates: [longitude, latitude],
-          },
-          deliveryAddress: description,
-          details: description,
-        });
-
-        router.push("/discovery");
-        setCityName("");
-        setSuggestions([]);
-      }
-    });
-  };
 
   const t = useTranslations();
 
+  // Handlers
+  const handleSelect = (latitude: number, longitude: number, description: string) => {
+    onUseLocalStorage(
+      "save",
+      USER_CURRENT_LOCATION_LS_KEY,
+      JSON.stringify({
+        label: t("Address"),
+        location: {
+          coordinates: [longitude, latitude],
+        },
+        _id: "",
+
+        deliveryAddress: description,
+      }),
+    );
+
+    setUserAddress({
+      _id: "",
+      label: t("Address"),
+      location: {
+        coordinates: [longitude, latitude],
+      },
+      deliveryAddress: description,
+      details: description,
+    });
+
+    router.push("/discovery");
+    setCityName("");
+    setSuggestions([]);
+  };
+
   // USe Effects
   useEffect(() => {
-    if (!isLoaded || !window.google || debouncedCityName.length < 2) {
+    if (!isLoaded || debouncedCityName.length < 2) {
       setSuggestions([]);
       return;
     }
 
-    const autocompleteService =
-      new window.google.maps.places.AutocompleteService();
-
-    autocompleteService.getPlacePredictions(
-      { input: debouncedCityName, types: ["(cities)"] },
-      (predictions, status) => {
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          predictions
-        ) {
-          setSuggestions(predictions);
-        } else {
-          setSuggestions([]);
-        }
-      },
-    );
+    let cancelled = false;
+    searchPlaces(debouncedCityName).then((results) => {
+      if (!cancelled) setSuggestions(results);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedCityName, isLoaded]);
 
   // Added effect for outside click
@@ -148,8 +119,11 @@ const CitySearch: React.FC = () => {
             >
               <button
                 type="button"
+                disabled={suggestion.lat == null || suggestion.lon == null}
                 onClick={() =>
-                  handleSelect(suggestion.place_id, suggestion.description)
+                  suggestion.lat != null &&
+                  suggestion.lon != null &&
+                  handleSelect(suggestion.lat, suggestion.lon, suggestion.description)
                 }
                 className="flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left text-sm text-dispatch-ink transition-colors hover:bg-primary-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-color"
               >

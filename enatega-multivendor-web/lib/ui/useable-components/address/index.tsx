@@ -15,7 +15,6 @@ import {
   faPlus,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
-import { GoogleMap, Marker } from "@react-google-maps/api";
 import { AutoComplete, AutoCompleteSelectEvent } from "primereact/autocomplete";
 import { throttle } from "lodash";
 import parse from "autosuggest-highlight/parse";
@@ -63,8 +62,8 @@ import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
 import AppartmentSvg from "@/lib/utils/assets/svg/apartment";
 import { useTranslations } from "next-intl";
-import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
-import { useTheme } from "@/lib/providers/ThemeProvider";
+import { searchPlaces } from "@/lib/api/google-maps";
+import LeafletMap from "@/lib/ui/useable-components/leaflet-map/dynamic";
 
 const variants = {
   enter: (direction: number) => ({
@@ -80,10 +79,6 @@ const variants = {
     opacity: 0,
   }),
 };
-
-const autocompleteService: {
-  current: google.maps.places.AutocompleteService | null;
-} = { current: null };
 
 export default function UserAddressComponent(
   props: IUserAddressComponentProps
@@ -109,7 +104,6 @@ export default function UserAddressComponent(
 
   // Hook
   const { profile, loadingProfile } = useUser();
-  const { theme } = useTheme();
   const { getCurrentLocation } = useLocation();
   const { getAddress } = useGeocoding();
   const { userAddress, setUserAddress } = useUserAddress();
@@ -149,9 +143,13 @@ export default function UserAddressComponent(
 
   const fetch = React.useMemo(
     () =>
-      throttle((request, callback) => {
-        autocompleteService?.current?.getPlacePredictions(request, callback);
-      }, 1500),
+      throttle(
+        async (request: { input: string }, callback: (results: IPlaceSelectedOption[]) => void) => {
+          const results = await searchPlaces(request.input);
+          callback(results as IPlaceSelectedOption[]);
+        },
+        1500
+      ),
     []
   );
 
@@ -214,40 +212,25 @@ export default function UserAddressComponent(
     event: AutoCompleteSelectEvent
   ) => {
     const selectedOption = event?.value as IPlaceSelectedOption;
-    if (selectedOption) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode(
-        { placeId: selectedOption.place_id },
-        (results: google.maps.GeocoderResult[] | null) => {
-          if (
-            results &&
-            results[0] &&
-            results[0]?.geometry &&
-            results[0]?.geometry.location
-          ) {
-            const location = results[0]?.geometry?.location;
+    if (selectedOption && selectedOption.lat != null && selectedOption.lon != null) {
+      setUserAddress({
+        _id: "",
+        deliveryAddress: selectedOption.description,
+        location: {
+          coordinates: [selectedOption.lon, selectedOption.lat],
+        },
+        label: "Home",
+      });
 
-            setUserAddress({
-              _id: "",
-              deliveryAddress: selectedOption.description,
-              location: {
-                coordinates: [location?.lng() ?? 0, location?.lat() ?? 0],
-              },
-              label: "Home",
-            });
-
-            setInputValue(selectedOption.description);
-          }
-        }
-      );
+      setInputValue(selectedOption.description);
       setSelectedPlaceObject(selectedOption);
     }
   };
 
-  const onCenterDraggedHandler = async (e?: google.maps.MapMouseEvent) => {
+  const onCenterDraggedHandler = async (lat?: number, lng?: number) => {
     const new_center = {
-      lat: e?.latLng?.lat() || newDraggedCenter.lat || 0,
-      lng: e?.latLng?.lng() || newDraggedCenter.lng || 0,
+      lat: lat || newDraggedCenter.lat || 0,
+      lng: lng || newDraggedCenter.lng || 0,
     };
     if (new_center.lat === 0 && new_center.lng === 0) return;
 
@@ -278,11 +261,8 @@ export default function UserAddressComponent(
     });
   };
 
-  const onClickGoogleMaps = (e: google.maps.MapMouseEvent) => {
-    setNewDraggedCenter({
-      lat: e?.latLng?.lat() ?? 0,
-      lng: e?.latLng?.lng() ?? 0,
-    });
+  const onClickGoogleMaps = (lat: number, lng: number) => {
+    setNewDraggedCenter({ lat, lng });
   };
 
   const t = useTranslations();
@@ -572,36 +552,30 @@ export default function UserAddressComponent(
           {t("Add_new_address")}
         </span>
       </div>
-      {/* Google Maps */}
+      {/* Map (OpenStreetMap via Leaflet) */}
       {isLoaded && (
         <div className="w-full">
-          <GoogleMap
-            options={{
-              styles: theme === "dark" ? darkMapStyle : null,
-              disableDefaultUI: true,
-            }}
-            mapContainerStyle={{
-              width: "100%",
-              height: "35vh",
-            }}
+          <LeafletMap
+            height="35vh"
             center={{
               lat: Number(userAddress?.location?.coordinates[1]) || 0,
               lng: Number(userAddress?.location?.coordinates[0]) || 0,
             }}
             zoom={13}
             onClick={onClickGoogleMaps}
-          >
-            {userAddress?.location?.coordinates && (
-              <Marker
-                position={{
-                  lat: Number(userAddress?.location?.coordinates[1]) || 0,
-                  lng: Number(userAddress?.location?.coordinates[0]) || 0,
-                }}
-                draggable
-                onDragEnd={onCenterDraggedHandler}
-              />
-            )}
-          </GoogleMap>
+            markers={
+              userAddress?.location?.coordinates
+                ? [
+                    {
+                      lat: Number(userAddress?.location?.coordinates[1]) || 0,
+                      lng: Number(userAddress?.location?.coordinates[0]) || 0,
+                      draggable: true,
+                      onDragEnd: onCenterDraggedHandler,
+                    },
+                  ]
+                : []
+            }
+          />
         </div>
       )}
 
@@ -670,12 +644,17 @@ export default function UserAddressComponent(
                 <div className="flex flex-col">
                   <div className="flex items-center">
                     <FontAwesomeIcon icon={faMapMarker} className="mr-2" />
-                    {parts &&
-                      parts?.map((part, index) => (
+                    {parts ? (
+                      parts.map((part, index) => (
                         <span className="dark:text-white" key={index}>
                           {part.text}
                         </span>
-                      ))}
+                      ))
+                    ) : (
+                      <span className="dark:text-white">
+                        {item.structured_formatting?.main_text}
+                      </span>
+                    )}
                   </div>
                   <small>{item.structured_formatting?.secondary_text}</small>
                 </div>
@@ -762,34 +741,27 @@ export default function UserAddressComponent(
           {t("Add_new_address")}
         </span>
       </div>
-      {/* Google Maps */}
+      {/* Map (OpenStreetMap via Leaflet) */}
       {isLoaded && (
         <div className="w-full">
-          <GoogleMap
-            options={{
-              styles: theme === "dark" ? darkMapStyle : null,
-              disableDefaultUI: true,
-            }}
-            mapContainerStyle={{
-              width: "100%",
-              height: "400px",
-            }}
+          <LeafletMap
+            height="400px"
             center={{
               lat: Number(editAddress?.location?.coordinates[1]) || 0,
               lng: Number(editAddress?.location?.coordinates[0]) || 0,
             }}
             zoom={13}
-            onCenterChanged={() => {}}
-          >
-            {editAddress?.location?.coordinates && (
-              <Marker
-                position={{
-                  lat: Number(editAddress?.location?.coordinates[1]) || 0,
-                  lng: Number(editAddress?.location?.coordinates[0]) || 0,
-                }}
-              />
-            )}
-          </GoogleMap>
+            markers={
+              editAddress?.location?.coordinates
+                ? [
+                    {
+                      lat: Number(editAddress?.location?.coordinates[1]) || 0,
+                      lng: Number(editAddress?.location?.coordinates[0]) || 0,
+                    },
+                  ]
+                : []
+            }
+          />
         </div>
       )}
 
@@ -858,8 +830,8 @@ export default function UserAddressComponent(
                 <div className="flex flex-col">
                   <div className="flex items-center dark:text-white">
                     <FontAwesomeIcon icon={faMapMarker} className="mr-2 " />
-                    {parts &&
-                      parts?.map((part, index) => (
+                    {parts ? (
+                      parts.map((part, index) => (
                         <span
                           className="dark:text-white"
                           key={index}
@@ -870,7 +842,12 @@ export default function UserAddressComponent(
                         >
                           {part.text}
                         </span>
-                      ))}
+                      ))
+                    ) : (
+                      <span className="dark:text-white">
+                        {item.structured_formatting?.main_text}
+                      </span>
+                    )}
                   </div>
                   <small className="dark:text-white">
                     {item.structured_formatting?.secondary_text}
@@ -957,18 +934,6 @@ export default function UserAddressComponent(
 
   // Effects
   useEffect(() => {
-    if (
-      !autocompleteService.current &&
-      window.google &&
-      window.google.maps?.places
-    ) {
-      autocompleteService.current =
-        new window.google.maps.places.AutocompleteService();
-    }
-    if (!autocompleteService.current) {
-      return;
-    }
-
     if (search === "") {
       setOptions(selectedPlaceObject ? [selectedPlaceObject] : []);
       return;
@@ -984,10 +949,6 @@ export default function UserAddressComponent(
       }
       setOptions(newOptions);
     });
-
-    return () => {
-      autocompleteService.current = null;
-    };
   }, [selectedPlaceObject, search, fetch]);
 
   useEffect(() => {

@@ -11,6 +11,7 @@ import useDebounce from "@/lib/hooks/useDebounce";
 import useLocation from "@/lib/hooks/useLocation";
 import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
+import { searchPlaces, type IPlaceSearchResult } from "@/lib/api/google-maps";
 
 type SelectedCity = {
   description: string;
@@ -28,9 +29,7 @@ export default function LandingCitySearch() {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<
-    google.maps.places.AutocompletePrediction[]
-  >([]);
+  const [suggestions, setSuggestions] = useState<IPlaceSearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [isResolving, setIsResolving] = useState(false);
@@ -60,27 +59,21 @@ export default function LandingCitySearch() {
   );
 
   useEffect(() => {
-    if (!isLoaded || !window.google || debouncedQuery.trim().length < 2) {
+    if (!isLoaded || debouncedQuery.trim().length < 2) {
       setSuggestions([]);
       setActiveIndex(-1);
       return;
     }
 
-    const service = new window.google.maps.places.AutocompleteService();
-    service.getPlacePredictions(
-      { input: debouncedQuery, types: ["(cities)"] },
-      (predictions, resultStatus) => {
-        if (
-          resultStatus === window.google.maps.places.PlacesServiceStatus.OK &&
-          predictions
-        ) {
-          setSuggestions(predictions);
-          setActiveIndex(-1);
-        } else {
-          setSuggestions([]);
-        }
-      },
-    );
+    let cancelled = false;
+    searchPlaces(debouncedQuery).then((results) => {
+      if (cancelled) return;
+      setSuggestions(results);
+      setActiveIndex(-1);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedQuery, isLoaded]);
 
   useEffect(() => {
@@ -94,32 +87,24 @@ export default function LandingCitySearch() {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const selectSuggestion = (
-    suggestion: google.maps.places.AutocompletePrediction,
-  ) => {
-    if (!window.google) return;
+  const selectSuggestion = (suggestion: IPlaceSearchResult) => {
     setIsResolving(true);
     setStatus(landingT("search.resolving"));
-    const geocoder = new window.google.maps.Geocoder();
-
-    geocoder.geocode({ placeId: suggestion.place_id }, (results, resultStatus) => {
-      const location = results?.[0]?.geometry?.location;
-      if (resultStatus === "OK" && location) {
-        const city = {
-          description: suggestion.description,
-          latitude: location.lat(),
-          longitude: location.lng(),
-        };
-        setQuery(suggestion.description);
-        setSelectedCity(city);
-        setSuggestions([]);
-        setActiveIndex(-1);
-        setStatus(landingT("search.ready"));
-      } else {
-        setStatus(landingT("search.cityError"));
-      }
-      setIsResolving(false);
-    });
+    if (suggestion.lat != null && suggestion.lon != null) {
+      const city = {
+        description: suggestion.description,
+        latitude: suggestion.lat,
+        longitude: suggestion.lon,
+      };
+      setQuery(suggestion.description);
+      setSelectedCity(city);
+      setSuggestions([]);
+      setActiveIndex(-1);
+      setStatus(landingT("search.ready"));
+    } else {
+      setStatus(landingT("search.cityError"));
+    }
+    setIsResolving(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

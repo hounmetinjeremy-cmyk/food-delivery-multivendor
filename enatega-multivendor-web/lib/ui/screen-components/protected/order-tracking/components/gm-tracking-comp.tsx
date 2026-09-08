@@ -1,15 +1,13 @@
 "use client";
 
-import { GoogleMap, Marker, Polyline } from "@react-google-maps/api";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import HomeIcon from "../../../../../assets/home_icon.png";
 import RiderIcon from "../../../../../assets/rider_icon.png";
 import StoreIcon from "../../../../../assets/zego-logo.png";
 import Image from "@/lib/ui/useable-components/safe-image";
-import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
-import { useTheme } from "@/lib/providers/ThemeProvider";
+import LeafletMap from "@/lib/ui/useable-components/leaflet-map/dynamic";
 import type {
   IOrderEta,
   IRiderTrackingLocation,
@@ -39,8 +37,6 @@ function GoogleMapTrackingComponent({
   showStaticLoadingImage = true,
 }: IGoogleMapTrackingComponent) {
   const t = useTranslations();
-  const { theme } = useTheme();
-  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const riderCoordinate = useMemo(() => {
     if (!riderLocation) return null;
@@ -64,20 +60,6 @@ function GoogleMapTrackingComponent({
     riderCoordinate,
     riderLocation,
   ]);
-
-  const fitRoute = useCallback(() => {
-    if (!map || typeof window === "undefined" || !window.google) return;
-    const bounds = new window.google.maps.LatLngBounds();
-    route.forEach((point) => bounds.extend(point));
-    if (origin) bounds.extend(origin);
-    bounds.extend(destination);
-    if (riderCoordinate) bounds.extend(riderCoordinate);
-    map.fitBounds(bounds, 48);
-  }, [destination, map, origin, riderCoordinate, route]);
-
-  useEffect(() => {
-    fitRoute();
-  }, [fitRoute]);
 
   if (!isLoaded) {
     if (!showStaticLoadingImage) {
@@ -108,61 +90,24 @@ function GoogleMapTrackingComponent({
     );
   }
 
+  const markers = [
+    { lat: destination.lat, lng: destination.lng, iconUrl: HomeIcon.src },
+    ...(origin ? [{ lat: origin.lat, lng: origin.lng, iconUrl: StoreIcon.src }] : []),
+    ...(riderCoordinate
+      ? [{ lat: riderCoordinate.lat, lng: riderCoordinate.lng, iconUrl: RiderIcon.src }]
+      : []),
+  ];
+
   return (
     <div className="relative overflow-hidden rounded-b-2xl">
-      <GoogleMap
-        options={{
-          styles: theme === "dark" ? darkMapStyle : null,
-          disableDefaultUI: true,
-          zoomControl: true,
-          gestureHandling: "greedy",
-          draggable: true,
-          scrollwheel: true,
-          keyboardShortcuts: true,
-        }}
-        mapContainerStyle={{ width: "100%", height: "400px" }}
+      <LeafletMap
+        height="400px"
         center={riderCoordinate || origin || destination}
         zoom={14}
-        onLoad={setMap}
-        onUnmount={() => setMap(null)}
-      >
-        <Marker
-          position={destination}
-          icon={{
-            url: HomeIcon.src,
-            scaledSize: new window.google.maps.Size(40, 40),
-          }}
-        />
-        {origin && (
-          <Marker
-            position={origin}
-            icon={{
-              url: StoreIcon.src,
-              scaledSize: new window.google.maps.Size(40, 40),
-            }}
-          />
-        )}
-        {riderCoordinate && (
-          <Marker
-            position={riderCoordinate}
-            icon={{
-              url: RiderIcon.src,
-              scaledSize: new window.google.maps.Size(40, 40),
-            }}
-          />
-        )}
-        {route.length > 1 && (
-          <Polyline
-            path={route}
-            options={{
-              strokeColor: "#5AC12F",
-              strokeOpacity: 0.9,
-              strokeWeight: 5,
-              zIndex: 10,
-            }}
-          />
-        )}
-      </GoogleMap>
+        markers={markers}
+        polyline={route.length > 1 ? route : undefined}
+        fitToContent
+      />
     </div>
   );
 }

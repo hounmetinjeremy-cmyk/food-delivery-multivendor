@@ -1,4 +1,4 @@
-import { Libraries } from "@react-google-maps/api";
+import type { Libraries } from "./google.map.interface";
 
 export interface IConfigProps {
   GOOGLE_CLIENT_ID: string;

@@ -8,7 +8,7 @@ import { IConfigProps } from "@/lib/utils/interfaces";
 
 // Apollo
 import { useQuery } from "@apollo/client";
-import { Libraries } from "@react-google-maps/api";
+import type { Libraries } from "@/lib/utils/interfaces/google.map.interface";
 
 // Core
 import React, { ReactNode, useContext } from "react";
