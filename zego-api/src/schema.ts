@@ -3,6 +3,7 @@ import { signJWT, verifyJWT, verifyPassword } from './auth'
 import { verifyGoogleIdToken } from './google'
 import { AuthError, requireUser, requireRole, type GraphQLContext } from './context'
 import { catalogTypeDefs, catalogResolvers } from './catalog'
+import { orderTypeDefs, orderResolvers } from './orders'
 
 function newId(): string {
   return crypto.randomUUID()
@@ -275,11 +276,13 @@ export const schema = createSchema<GraphQLContext>({
       isActive: Boolean!
     }
   `,
-    catalogTypeDefs
+    catalogTypeDefs,
+    orderTypeDefs
   ],
   resolvers: {
     Query: {
       ...catalogResolvers.Query,
+      ...orderResolvers.Query,
       health: () => 'ok',
 
       configuration: async (_parent, _args, ctx) => {
@@ -427,6 +430,7 @@ export const schema = createSchema<GraphQLContext>({
 
     Mutation: {
       ...catalogResolvers.Mutation,
+      ...orderResolvers.Mutation,
       continueWithGoogle: async (_parent, args: { idToken: string }, ctx) => {
         const user = await upsertGoogleUser(args.idToken, ctx)
         const token = await signJWT(
