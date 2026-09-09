@@ -15,6 +15,7 @@ interface UserRow {
   email: string | null
   role: string
   image_url: string | null
+  is_active?: number
   password_hash?: string | null
 }
 
@@ -111,7 +112,8 @@ async function buildOwnerSessionPayload(user: UserRow, ctx: GraphQLContext) {
     permissions: [],
     userTypeId: user.id,
     image: user.image_url,
-    name: user.name
+    name: user.name,
+    isActive: user.is_active !== 0
   }
 }
 
@@ -160,6 +162,7 @@ export const schema = createSchema<GraphQLContext>({
       userTypeId: String
       image: String
       name: String
+      isActive: Boolean!
     }
 
     type OwnerRestaurantSummary {
@@ -426,7 +429,7 @@ export const schema = createSchema<GraphQLContext>({
       ownerSession: async (_parent, _args, ctx) => {
         const authUser = requireRole(ctx, 'vendor', 'admin')
         const user = await ctx.env.DB.prepare(
-          'SELECT id, email, name, role, image_url FROM users WHERE id = ?'
+          'SELECT id, email, name, role, image_url, is_active FROM users WHERE id = ?'
         )
           .bind(authUser.sub)
           .first<UserRow>()
@@ -664,7 +667,7 @@ export const schema = createSchema<GraphQLContext>({
         ctx
       ) => {
         const user = await ctx.env.DB.prepare(
-          `SELECT id, email, name, role, image_url, password_hash FROM users
+          `SELECT id, email, name, role, image_url, is_active, password_hash FROM users
            WHERE email = ? AND role IN ('vendor', 'admin')`
         )
           .bind(args.email.toLowerCase())
