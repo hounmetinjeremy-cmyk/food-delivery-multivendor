@@ -1,7 +1,11 @@
 import { useLocationContext } from "@/lib/context/global/location.context";
 import { useApptheme } from "@/lib/context/global/theme.context";
 import { ILocationPermissionComponentProps } from "@/lib/utils/interfaces";
-import * as Location from "expo-location";
+// Routed through a local wrapper (not "expo-location" directly) so Metro's
+// platform resolution can swap in a web-safe permission check — see
+// lib/services/geo-foreground-permission.web.ts for why. Native (iOS/
+// Android) behavior and this screen's own logic are unchanged.
+import * as Location from "../../../services/geo-foreground-permission";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
