@@ -9,6 +9,16 @@ import { onUseLocalStorage } from "./local-storage";
 const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
 const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
+// Vendor/rider dashboards embed a full separate app (or a data-dense screen)
+// and need the whole viewport — the normal top bar + profile tabs chrome
+// stacked on top of them just doubles up with their own navigation.
+export function isImmersiveProfileRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/profile/dashboard") ||
+    pathname.startsWith("/profile/rider-dashboard")
+  );
+}
+
 export function formatDate(dateString?: string): string {
   if (!dateString) return "";
 

@@ -22,9 +22,11 @@ import { useSearchUI } from "@/lib/context/search/search.context";
 import { useAuth } from "@/lib/context/auth/auth.context";
 import { usePathname } from "next/navigation";
 import { hasValidAuthToken } from "@/lib/utils/methods/auth";
+import { isImmersiveProfileRoute } from "@/lib/utils/methods/helpers";
 
 const AppLayout = ({ children }: IProvider) => {
   const pathname = usePathname();
+  const immersive = isImmersiveProfileRoute(pathname ?? "");
   const [isScrolled, setIsScrolled] = useState(false);
   // Hooks
   const { isAuthModalVisible, setIsAuthModalVisible, setActivePanel } = useAuth();
@@ -72,7 +74,14 @@ const AppLayout = ({ children }: IProvider) => {
     }
   }, [])
 
-  const UI = (
+  const UI = immersive ? (
+    <div className="flex h-dvh flex-col bg-dispatch-ground text-dispatch-ink dark:bg-gray-950 dark:text-white">
+      <main className="min-h-0 flex-1 pb-[64px]">
+        {children}
+      </main>
+      <BottomTabBar />
+    </div>
+  ) : (
     <div className="layout-main min-h-dvh bg-dispatch-ground text-dispatch-ink dark:bg-gray-950 dark:text-white">
       <div className={`
         layout-top-container transition-all duration-300 ease-out

@@ -43,7 +43,7 @@ export default function VendorDashboardEmbed() {
 
   if (isAllowed === null || !iframeSrc) {
     return (
-      <div className="flex h-[60vh] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400">
         {t("loading_orders")}
       </div>
     );
@@ -52,13 +52,11 @@ export default function VendorDashboardEmbed() {
   if (!isAllowed) return null;
 
   return (
-    <div className="w-full">
-      <iframe
-        src={iframeSrc}
-        title="ZeGo Admin"
-        className="h-[75vh] w-full rounded-lg border border-gray-200 dark:border-gray-700"
-        allow="geolocation"
-      />
-    </div>
+    <iframe
+      src={iframeSrc}
+      title="ZeGo Admin"
+      className="h-full w-full border-0"
+      allow="geolocation"
+    />
   );
 }
