@@ -27,6 +27,7 @@ export default function RootStackLayout() {
         }}
       />
       <Stack.Screen name="chat" options={{ headerShown: false }} />
+      <Stack.Screen name="sso" options={{ headerShown: false }} />
     </Stack>
   );
 }

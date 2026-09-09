@@ -10,3 +10,7 @@ google-service-account.json
 .env
 .env.local
 .env.*.local
+
+# expo export --platform web output, deployed as the zego-rider Worker's
+# static assets — regenerated at build time, not checked in.
+dist/

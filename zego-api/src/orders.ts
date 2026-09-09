@@ -360,7 +360,7 @@ export const orderTypeDefs = /* GraphQL */ `
     ordersByRestIdWithoutPagination(restaurant: String!, search: String): [Order!]!
     riderOrders(limit: Int, offset: Int): [Order!]!
     rider(id: String!): Rider
-    transactionHistory(limit: Int, offset: Int): [RiderWalletTransaction!]!
+    transactionHistory(limit: Int, offset: Int): RiderTransactionHistoryResult!
   }
 
   extend type Mutation {
@@ -397,6 +397,19 @@ export const orderTypeDefs = /* GraphQL */ `
     updateRiderLicenseDetails(id: String!, licenseDetails: LicenseDetailsInput): Rider!
     updateRiderBussinessDetails(id: String!, bussinessDetails: BussinessDetailsInput): Rider!
     updateWorkSchedule(riderId: String!, workSchedule: [DayScheduleInput!]!, timeZone: String): Rider!
+    editRider(riderInput: RiderInput!): Rider!
+  }
+
+  input RiderInput {
+    _id: String!
+    name: String
+    username: String
+    phone: String
+    vehicleType: String
+    available: Boolean
+    # Accepted for compatibility with the existing rider app's edit form —
+    # zones aren't modeled yet, so this is a no-op until they are.
+    zone: String
   }
 
   input VehicleDetailsInput { number: String image: String }
@@ -447,6 +460,14 @@ export const orderTypeDefs = /* GraphQL */ `
     type: String!
     orderId: String
     createdAt: String!
+    # Aliases matching the existing rider app's own transactionHistory query,
+    # alongside the fields above (used by the web app's own wallet screen).
+    status: String!
+    amountTransferred: Float!
+  }
+
+  type RiderTransactionHistoryResult {
+    data: [RiderWalletTransaction!]!
   }
 
   type OrderVariation { _id: ID! id: ID! title: String price: Float discounted: Float }
@@ -841,13 +862,17 @@ export const orderResolvers = {
           order_id: string | null
           created_at: string
         }>()
-      return results.map((r) => ({
-        id: r.id,
-        amount: r.amount,
-        type: r.type,
-        orderId: r.order_id,
-        createdAt: r.created_at
-      }))
+      return {
+        data: results.map((r) => ({
+          id: r.id,
+          amount: r.amount,
+          type: r.type,
+          orderId: r.order_id,
+          createdAt: r.created_at,
+          status: 'completed',
+          amountTransferred: r.amount
+        }))
+      }
     }
   },
 
@@ -1268,6 +1293,44 @@ export const orderResolvers = {
       )
         .bind(riderId)
         .run()
+      return loadRiderProfile(ctx, riderId)
+    },
+
+    editRider: async (
+      _p: unknown,
+      args: {
+        riderInput: {
+          _id: string
+          name?: string
+          username?: string
+          phone?: string
+          vehicleType?: string
+          available?: boolean
+          zone?: string
+        }
+      },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, 'rider', 'admin')
+      const riderId = user.role === 'admin' ? args.riderInput._id : user.sub
+      const { name, phone, vehicleType, available } = args.riderInput
+      if (name !== undefined || phone !== undefined) {
+        await ctx.env.DB.prepare(
+          'UPDATE users SET name = COALESCE(?, name), phone = COALESCE(?, phone) WHERE id = ?'
+        )
+          .bind(name ?? null, phone ?? null, riderId)
+          .run()
+      }
+      if (vehicleType !== undefined || available !== undefined) {
+        await ctx.env.DB.prepare(
+          `UPDATE rider_profiles SET
+             vehicle_type = COALESCE(?, vehicle_type),
+             is_available = COALESCE(?, is_available)
+           WHERE user_id = ?`
+        )
+          .bind(vehicleType ?? null, available === undefined ? null : available ? 1 : 0, riderId)
+          .run()
+      }
       return loadRiderProfile(ctx, riderId)
     },
 

@@ -128,6 +128,12 @@ export const schema = createSchema<GraphQLContext>({
       messages(conversationId: ID!): [Message!]!
       ownerSession: OwnerLoginPayload!
       adminSsoToken: String!
+      riderSsoToken: RiderSsoPayload!
+    }
+
+    type RiderSsoPayload {
+      userId: ID!
+      token: String!
     }
 
     type Mutation {
@@ -443,6 +449,15 @@ export const schema = createSchema<GraphQLContext>({
       adminSsoToken: async (_parent, _args, ctx) => {
         const authUser = requireRole(ctx, 'vendor', 'admin')
         return signJWT({ sub: authUser.sub, role: authUser.role }, ctx.env.JWT_SECRET, 120)
+      },
+
+      // Hands the rider app a normal (30-day) session token directly — unlike
+      // adminSsoToken, the rider app has no separate "verify and issue a
+      // fresh token" step, so this token IS what it stores and reuses.
+      riderSsoToken: async (_parent, _args, ctx) => {
+        const authUser = requireRole(ctx, 'rider')
+        const token = await signJWT({ sub: authUser.sub, role: 'rider' }, ctx.env.JWT_SECRET)
+        return { userId: authUser.sub, token }
       }
     },
 

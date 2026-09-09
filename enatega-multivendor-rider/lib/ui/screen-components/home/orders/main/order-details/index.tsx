@@ -27,13 +27,19 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+// Routed through a local wrapper (not "react-native-maps" directly) so
+// Metro's platform resolution can swap in a Leaflet/OpenStreetMap
+// implementation for the web export — react-native-maps has no web target.
+// Native (iOS/Android) behavior and this screen's own logic are unchanged.
 import MapView, {
   LatLng,
   MapStyleElement,
   Marker,
   PROVIDER_DEFAULT,
-} from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions";
+} from "../../../../../useable-components/rn-maps";
+import MapViewDirections from "../../../../../useable-components/rn-map-directions";
+// (Files: lib/ui/useable-components/rn-maps.ts / .web.tsx and
+// rn-map-directions.ts / .web.tsx)
 
 // Methods
 import { linkToMapsApp } from "@/lib/utils/methods";

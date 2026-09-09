@@ -26,11 +26,13 @@ const RIDER_WALLET_QUERY = /* GraphQL */ `
       withdrawnWalletAmount
     }
     transactionHistory {
-      id
-      amount
-      type
-      orderId
-      createdAt
+      data {
+        id
+        amount
+        type
+        orderId
+        createdAt
+      }
     }
   }
 `;
@@ -55,13 +57,13 @@ export default function RiderWallet() {
   useEffect(() => {
     const riderId = getZegoApiUserId();
     if (!riderId) return;
-    zegoApiFetch<{ rider: RiderWalletProfile | null; transactionHistory: WalletTransaction[] }>(
-      RIDER_WALLET_QUERY,
-      { id: riderId },
-    )
+    zegoApiFetch<{
+      rider: RiderWalletProfile | null;
+      transactionHistory: { data: WalletTransaction[] };
+    }>(RIDER_WALLET_QUERY, { id: riderId })
       .then((data) => {
         setWallet(data.rider);
-        setTransactions(data.transactionHistory);
+        setTransactions(data.transactionHistory.data);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load wallet"))
       .finally(() => setIsLoading(false));
