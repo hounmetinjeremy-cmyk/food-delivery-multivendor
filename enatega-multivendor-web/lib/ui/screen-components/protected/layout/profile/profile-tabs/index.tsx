@@ -2,12 +2,15 @@
 
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
 import { IProfileTabsProps, ITabItem } from "@/lib/utils/interfaces";
 import { TabItem } from "@/lib/ui/useable-components/profile-tabs";
 import { useProfileDefaultTabs } from "@/lib/utils/constants";
 import RiderSignupModal from "@/lib/ui/useable-components/rider-signup-modal";
 import VendorSignupModal from "@/lib/ui/useable-components/vendor-signup-modal";
 import { getZegoApiUserRole } from "@/lib/zego-api/client";
+import { openApkDownload } from "@/lib/utils/methods/helpers";
+import useToast from "@/lib/hooks/useToast";
 
 const BECOME_RIDER_PATH = "#become-rider";
 const VENDOR_DASHBOARD_PATH = "#vendor-dashboard";
@@ -15,6 +18,7 @@ const VENDOR_DASHBOARD_PATH = "#vendor-dashboard";
 export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { tabs?: ITabItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { showToast } = useToast();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isRiderModalVisible, setIsRiderModalVisible] = useState(false);
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
@@ -25,6 +29,20 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
 
   const goToTab = (path: string) => {
     if (path === BECOME_RIDER_PATH) {
+      // Live GPS tracking needs the native app — the plain website sends
+      // riders-to-be to install/open it instead of registering in a tab
+      // that can't track their position reliably.
+      if (!Capacitor.isNativePlatform()) {
+        showToast({
+          type: "info",
+          title: "Application requise",
+          message:
+            "Le mode livreur nécessite l'application mobile ZeGo (GPS et suivi en temps réel). Téléchargement en cours...",
+          duration: 5000,
+        });
+        openApkDownload();
+        return;
+      }
       setIsRiderModalVisible(true);
       return;
     }

@@ -11,8 +11,10 @@ import { Button } from "primereact/button";
 
 // libraries and utils
 import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
 import "react-phone-input-2/lib/style.css";
 import { zegoApiFetch, setZegoApiToken } from "@/lib/zego-api/client";
+import { APK_DOWNLOAD_URL } from "@/lib/utils/constants/apk";
 
 // interfcaes
 import { VendorFormValues } from "@/lib/utils/interfaces/Rider-restaurant.interface";
@@ -137,6 +139,32 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
       });
     }
   };
+
+  // Live GPS tracking can't run reliably in a plain browser tab, so becoming
+  // a rider requires the native APK — send them to install/open it instead
+  // of filling out this form on the website.
+  if (requestType === "rider" && !Capacitor.isNativePlatform()) {
+    return (
+      <div className="p-6 max-w-xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-m my-6 text-center">
+        <h2 className="text-[20px] font-semibold mb-3 dark:text-gray-100">
+          {heading}
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+          Le mode livreur nécessite l&apos;application mobile ZeGo (GPS et
+          suivi en temps réel), qui ne peut pas fonctionner de manière fiable
+          dans un simple site web.
+        </p>
+        <a
+          href={APK_DOWNLOAD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block bg-primary-color text-white font-medium px-6 py-2 rounded-full hover:bg-primary-color transition-all"
+        >
+          Télécharger l&apos;application
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-m my-6">

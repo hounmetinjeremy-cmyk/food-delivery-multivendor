@@ -5,6 +5,7 @@ import {
 import { OrderStatus } from "../interfaces";
 import emailjs from "emailjs-com";
 import { onUseLocalStorage } from "./local-storage";
+import { APK_DOWNLOAD_URL } from "../constants/apk";
 
 const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
 const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
@@ -17,6 +18,15 @@ export function isImmersiveProfileRoute(pathname: string): boolean {
     pathname.startsWith("/profile/dashboard") ||
     pathname.startsWith("/profile/rider-dashboard")
   );
+}
+
+// Live GPS tracking can't run reliably in a plain browser tab, so becoming a
+// rider is gated to the native APK — the website sends them to install/open
+// it instead of opening the in-page signup form (see profile-tabs and
+// profile-mode-switcher).
+export function openApkDownload(): void {
+  if (typeof window === "undefined") return;
+  window.open(APK_DOWNLOAD_URL, "_blank", "noopener,noreferrer");
 }
 
 export function formatDate(dateString?: string): string {

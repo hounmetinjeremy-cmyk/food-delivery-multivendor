@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { ITabItem } from "@/lib/utils/interfaces";
 import { useAppMode } from "@/lib/mode";
 import { getZegoApiUserRole } from "@/lib/zego-api/client";
+import { APK_DOWNLOAD_URL } from "@/lib/utils/constants/apk";
 
 export const useProfileDefaultTabs = (): ITabItem[] => {
   const t = useTranslations();
@@ -28,9 +29,7 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
       : []),
     {
       label: "Télécharger l'application (APK)",
-      path:
-        process.env.NEXT_PUBLIC_APK_URL ??
-        "https://github.com/hounmetinjeremy-cmyk/food-delivery-multivendor/releases/download/apk-latest/zego.apk",
+      path: APK_DOWNLOAD_URL,
     },
   ];
   return isSingleVendor ? [

@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
 import RiderSignupModal from "@/lib/ui/useable-components/rider-signup-modal";
 import VendorSignupModal from "@/lib/ui/useable-components/vendor-signup-modal";
 import { getZegoApiUserRole } from "@/lib/zego-api/client";
+import { openApkDownload } from "@/lib/utils/methods/helpers";
+import useToast from "@/lib/hooks/useToast";
 
 // Slim top bar for the full-screen profile spaces (vendor/rider dashboard) —
 // lets a user jump between their Client/Vendeur/Livreur spaces without the
@@ -13,6 +16,7 @@ import { getZegoApiUserRole } from "@/lib/zego-api/client";
 export default function ProfileModeSwitcher() {
   const router = useRouter();
   const pathname = usePathname() ?? "";
+  const { showToast } = useToast();
   const [isRiderModalVisible, setIsRiderModalVisible] = useState(false);
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
 
@@ -29,9 +33,22 @@ export default function ProfileModeSwitcher() {
   const goToRider = () => {
     if (role === "rider") {
       router.push("/profile/rider-dashboard");
-    } else {
-      setIsRiderModalVisible(true);
+      return;
     }
+    // Live GPS tracking needs the native app — the plain website sends
+    // riders-to-be to install/open it instead of registering here.
+    if (!Capacitor.isNativePlatform()) {
+      showToast({
+        type: "info",
+        title: "Application requise",
+        message:
+          "Le mode livreur nécessite l'application mobile ZeGo (GPS et suivi en temps réel). Téléchargement en cours...",
+        duration: 5000,
+      });
+      openApkDownload();
+      return;
+    }
+    setIsRiderModalVisible(true);
   };
 
   const modes = [
