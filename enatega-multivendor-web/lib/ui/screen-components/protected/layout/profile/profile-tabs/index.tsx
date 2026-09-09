@@ -6,14 +6,18 @@ import { IProfileTabsProps, ITabItem } from "@/lib/utils/interfaces";
 import { TabItem } from "@/lib/ui/useable-components/profile-tabs";
 import { useProfileDefaultTabs } from "@/lib/utils/constants";
 import RiderSignupModal from "@/lib/ui/useable-components/rider-signup-modal";
+import VendorSignupModal from "@/lib/ui/useable-components/vendor-signup-modal";
+import { getZegoApiUserRole } from "@/lib/zego-api/client";
 
 const BECOME_RIDER_PATH = "#become-rider";
+const VENDOR_DASHBOARD_PATH = "#vendor-dashboard";
 
 export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { tabs?: ITabItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isRiderModalVisible, setIsRiderModalVisible] = useState(false);
+  const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
 
   // Use the passed tabs or default to profileDefaultTabs
   const defaultTabs = useProfileDefaultTabs();
@@ -22,6 +26,17 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
   const goToTab = (path: string) => {
     if (path === BECOME_RIDER_PATH) {
       setIsRiderModalVisible(true);
+      return;
+    }
+    if (path === VENDOR_DASHBOARD_PATH) {
+      // Already a vendor (or admin)? Go straight to the in-app dashboard
+      // instead of asking them to request access again.
+      const role = getZegoApiUserRole();
+      if (role === "vendor" || role === "admin") {
+        router.push("/profile/dashboard");
+      } else {
+        setIsVendorModalVisible(true);
+      }
       return;
     }
     if (path.startsWith("http")) {
@@ -101,6 +116,10 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
       <RiderSignupModal
         visible={isRiderModalVisible}
         onHide={() => setIsRiderModalVisible(false)}
+      />
+      <VendorSignupModal
+        visible={isVendorModalVisible}
+        onHide={() => setIsVendorModalVisible(false)}
       />
     </div>
   );

@@ -19,22 +19,37 @@ export function clearZegoApiToken(): void {
   window.localStorage.removeItem(TOKEN_STORAGE_KEY)
 }
 
+function decodeTokenPayload(token: string): { sub?: string; role?: string } | null {
+  const payloadSegment = token.split('.')[1]
+  if (!payloadSegment) return null
+  try {
+    const padded = payloadSegment.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4))
+    return JSON.parse(atob(padded + pad)) as { sub?: string; role?: string }
+  } catch {
+    return null
+  }
+}
+
 /** Reads the `sub` claim out of the stored session token, for telling
  * "sent by me" apart in a conversation. The server independently verifies
  * the token's signature on every request, so this is UI-only. */
 export function getZegoApiUserId(): string | null {
   const token = getZegoApiToken()
   if (!token) return null
-  const payloadSegment = token.split('.')[1]
-  if (!payloadSegment) return null
-  try {
-    const padded = payloadSegment.replace(/-/g, '+').replace(/_/g, '/')
-    const pad = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4))
-    const payload = JSON.parse(atob(padded + pad)) as { sub?: string }
-    return payload.sub ?? null
-  } catch {
-    return null
-  }
+  return decodeTokenPayload(token)?.sub ?? null
+}
+
+/** Reads the `role` claim out of the stored session token — used to decide
+ * which Profile sections (vendor dashboard, rider dashboard) to show. This
+ * updates the moment a fresh token is stored (e.g. right after becoming a
+ * rider), unlike the primary login profile which only reflects the role at
+ * the time of the original sign-in. UI-only: the server independently
+ * checks the role on every request. */
+export function getZegoApiUserRole(): string | null {
+  const token = getZegoApiToken()
+  if (!token) return null
+  return decodeTokenPayload(token)?.role ?? null
 }
 
 export class ZegoApiError extends Error {}

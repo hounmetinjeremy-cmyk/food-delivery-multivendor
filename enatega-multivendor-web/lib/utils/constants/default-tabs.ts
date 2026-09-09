@@ -3,10 +3,12 @@
 import { useTranslations } from "next-intl";
 import { ITabItem } from "@/lib/utils/interfaces";
 import { useAppMode } from "@/lib/mode";
+import { getZegoApiUserRole } from "@/lib/zego-api/client";
 
 export const useProfileDefaultTabs = (): ITabItem[] => {
   const t = useTranslations();
   const { isSingleVendor } = useAppMode();
+  const role = getZegoApiUserRole();
   const base = [
     { label: t("profileDefaultTabs.tab1"), path: "/profile" },
     { label: t("profileDefaultTabs.tab2"), path: "/profile/addresses" },
@@ -15,15 +17,15 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
     { label: t("profileDefaultTabs.tab5"), path: "/profile/getHelp" },
     { label: t("profileDefaultTabs.tab6"), path: "/profile/customerTicket" },
     // One click each: register (or open the dashboard if already registered)
-    // — no marketing page in between. "#become-rider" is a sentinel path
-    // handled by ProfileTabs to open a quick signup modal instead of routing.
-    {
-      label: "Devenir vendeur / Tableau de bord",
-      path:
-        process.env.NEXT_PUBLIC_ADMIN_URL ??
-        "https://zego-admin.hounmetinjeremy.workers.dev",
-    },
+    // — no marketing page and no leaving the app. "#become-rider" and
+    // "#vendor-dashboard" are sentinel paths handled by ProfileTabs, which
+    // opens a quick signup modal or the in-app dashboard instead of routing
+    // to an external URL.
+    { label: "Devenir vendeur / Tableau de bord", path: "#vendor-dashboard" },
     { label: "Devenir livreur", path: "#become-rider" },
+    ...(role === "rider"
+      ? [{ label: "Tableau de bord livreur", path: "/profile/rider-dashboard" }]
+      : []),
     {
       label: "Télécharger l'application (APK)",
       path:
