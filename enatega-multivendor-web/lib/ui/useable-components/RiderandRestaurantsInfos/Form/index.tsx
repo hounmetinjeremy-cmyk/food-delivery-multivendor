@@ -134,7 +134,10 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
       showToast({
         type: "error",
         title: t("toast_error"),
-        message: t("failed_to_submit_form_please_try_again"),
+        message:
+          error instanceof Error && error.message
+            ? error.message
+            : t("failed_to_submit_form_please_try_again"),
         duration: 4000,
       });
     }

@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql'
 import type { GraphQLContext } from './context'
 import { AuthError, requireUser } from './context'
 import { hashPassword, signJWT } from './auth'
@@ -1285,6 +1286,23 @@ export const catalogResolvers = {
         firstName = input.firstName
         lastName = input.lastName
         passwordHash = input.password ? await hashPassword(input.password) : null
+
+        // users.email is UNIQUE — inserting a duplicate would otherwise throw
+        // a raw D1 constraint error the client just shows as a generic
+        // "failed to submit" with no way to know why.
+        const existingByEmail = await ctx.env.DB.prepare(
+          'SELECT id FROM users WHERE email = ?'
+        )
+          .bind(email)
+          .first<{ id: string }>()
+        if (existingByEmail) {
+          // A plain Error gets masked to "Unexpected error" by GraphQL Yoga's
+          // default error masking — GraphQLError (like AuthError) is exempt,
+          // so the real message actually reaches the form.
+          throw new GraphQLError(
+            'Un compte existe déjà avec cet email. Connectez-vous plutôt.'
+          )
+        }
       }
       const name = [firstName, lastName].filter(Boolean).join(' ')
 
