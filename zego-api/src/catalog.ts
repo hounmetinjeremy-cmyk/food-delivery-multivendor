@@ -476,6 +476,7 @@ export const catalogTypeDefs = /* GraphQL */ `
     email: String
     phone: String
     password: String
+    restaurantName: String
   }
 
   type PartnerRequestResult {
@@ -1245,6 +1246,7 @@ export const catalogResolvers = {
           email?: string
           phone?: string
           password?: string
+          restaurantName?: string
         }
       },
       ctx: GraphQLContext
@@ -1286,72 +1288,56 @@ export const catalogResolvers = {
       }
       const name = [firstName, lastName].filter(Boolean).join(' ')
 
-      // Riders have no separate onboarding dashboard yet, so self-registration
-      // activates them immediately (visible in the Livreur list right away)
-      // instead of sitting in partner_requests waiting for a review step that
-      // doesn't exist. Vendors still go through the admin app's own sign-up.
-      const isAutoActivatedRider = input.requestType === 'rider'
+      // Neither riders nor vendors have a review step that actually exists,
+      // so self-registration activates both immediately instead of sitting
+      // in partner_requests waiting for a manual approval nobody performs.
+      const role = input.requestType === 'rider' ? 'rider' : 'vendor'
 
       await ctx.env.DB.prepare(
         `INSERT INTO partner_requests (id, request_type, first_name, last_name, email, phone, password_hash, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'approved')`
       )
-        .bind(
-          newId(),
-          input.requestType,
-          firstName,
-          lastName,
-          email,
-          input.phone ?? null,
-          passwordHash,
-          isAutoActivatedRider ? 'approved' : 'pending'
-        )
+        .bind(newId(), input.requestType, firstName, lastName, email, input.phone ?? null, passwordHash)
         .run()
 
-      if (!isAutoActivatedRider) {
-        return { success: true, token: null, role: null }
-      }
-
+      const userId = existingUserId ?? newId()
       if (existingUserId) {
         // Upgrade the existing Google-authenticated account in place instead
         // of creating a second, disconnected identity for the same person.
         await ctx.env.DB.prepare(
-          `UPDATE users SET role = 'rider', phone = COALESCE(?, phone) WHERE id = ? AND role = 'customer'`
+          `UPDATE users SET role = ?, phone = COALESCE(?, phone) WHERE id = ? AND role = 'customer'`
         )
-          .bind(input.phone ?? null, existingUserId)
+          .bind(role, input.phone ?? null, existingUserId)
           .run()
+      } else {
+        await ctx.env.DB.prepare(
+          `INSERT INTO users (id, email, phone, password_hash, name, first_name, last_name, role)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+          .bind(userId, email, input.phone ?? null, passwordHash, name, firstName, lastName, role)
+          .run()
+      }
+
+      if (role === 'rider') {
         await ctx.env.DB.prepare(
           `INSERT INTO rider_profiles (user_id, is_available) VALUES (?, 1)
            ON CONFLICT(user_id) DO NOTHING`
         )
-          .bind(existingUserId)
+          .bind(userId)
           .run()
-        const token = await signJWT({ sub: existingUserId, role: 'rider' }, ctx.env.JWT_SECRET)
-        return { success: true, token, role: 'rider' }
+      } else {
+        // A vendor needs at least one store to land on a working dashboard
+        // instead of an empty one — created with just a name; everything
+        // else (address, menu, hours...) is filled in from the dashboard.
+        await ctx.env.DB.prepare(
+          `INSERT INTO restaurants (id, owner_id, name) VALUES (?, ?, ?)`
+        )
+          .bind(newId(), userId, input.restaurantName || name || 'Ma boutique')
+          .run()
       }
 
-      const userId = newId()
-      await ctx.env.DB.prepare(
-        `INSERT INTO users (id, email, phone, password_hash, name, first_name, last_name, role)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'rider')`
-      )
-        .bind(
-          userId,
-          email,
-          input.phone ?? null,
-          passwordHash,
-          name,
-          firstName,
-          lastName
-        )
-        .run()
-      await ctx.env.DB.prepare(
-        `INSERT INTO rider_profiles (user_id, is_available) VALUES (?, 1)`
-      )
-        .bind(userId)
-        .run()
-
-      return { success: true, token: null, role: null }
+      const token = await signJWT({ sub: userId, role }, ctx.env.JWT_SECRET)
+      return { success: true, token, role }
     },
 
     createVendor: async (

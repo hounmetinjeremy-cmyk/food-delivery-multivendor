@@ -6,6 +6,7 @@ import * as Yup from "yup";
 const emailValidationSchema = (
   t: (key: string) => string,
   isAuthenticated = false,
+  requestType: "rider" | "vendor" = "rider",
 ) =>
   Yup.object({
     firstName: isAuthenticated
@@ -29,6 +30,10 @@ const emailValidationSchema = (
           .oneOf([Yup.ref("password")], t("confirmPasswordMismatch"))
           .required(t("confirmPasswordRequired")),
     termsAccepted: Yup.boolean().oneOf([true], t("termsRequired")),
+    restaurantName:
+      requestType === "vendor"
+        ? Yup.string().required("Le nom de la boutique est requis")
+        : Yup.string(),
   });
 
 export default emailValidationSchema;

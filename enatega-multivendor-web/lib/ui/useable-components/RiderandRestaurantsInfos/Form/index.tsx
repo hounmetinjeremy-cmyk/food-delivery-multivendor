@@ -70,6 +70,7 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
     password: "",
     confirmPassword: "",
     termsAccepted: false,
+    restaurantName: "",
   };
 
   const handleSubmit = async (formData: VendorFormValues) => {
@@ -79,7 +80,13 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
           SUBMIT_PARTNER_REQUEST_MUTATION,
           {
             input: isAuthenticated
-              ? { requestType, phone: formData.phoneNumber }
+              ? {
+                  requestType,
+                  phone: formData.phoneNumber,
+                  ...(requestType === "vendor"
+                    ? { restaurantName: formData.restaurantName }
+                    : {}),
+                }
               : {
                   requestType,
                   firstName: formData.firstName,
@@ -87,12 +94,15 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
                   email: formData.email,
                   phone: formData.phoneNumber,
                   password: formData.password,
+                  ...(requestType === "vendor"
+                    ? { restaurantName: formData.restaurantName }
+                    : {}),
                 },
           },
         );
 
-      // Upgraded in place to a rider account — refresh the session token so
-      // the Livreur tab recognizes the new role immediately, no re-login.
+      // Upgraded in place to a rider/vendor account — refresh the session
+      // token so the app recognizes the new role immediately, no re-login.
       if (submitPartnerRequest.token) {
         setZegoApiToken(submitPartnerRequest.token);
       }
@@ -103,11 +113,19 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
         message:
           requestType === "rider" && isAuthenticated
             ? t("you_are_now_a_rider_message")
-            : t("form_submitted_successfully"),
+            : requestType === "vendor" && submitPartnerRequest.token
+              ? "Votre boutique est prête !"
+              : t("form_submitted_successfully"),
         duration: 4000,
       });
 
-      router.push("/");
+      // A vendor with a fresh token is instantly active — take them straight
+      // to their dashboard instead of the home page.
+      if (requestType === "vendor" && submitPartnerRequest.token) {
+        router.push("/profile/dashboard");
+      } else {
+        router.push("/");
+      }
     } catch (error) {
       console.error(`Failed to submit ${role} request:`, error);
 
@@ -128,7 +146,7 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
 
       <Formik
         initialValues={initialValues}
-        validationSchema={emailValidationSchema(t, isAuthenticated)}
+        validationSchema={emailValidationSchema(t, isAuthenticated, requestType)}
         onSubmit={handleSubmit}
         enableReinitialize
       >
@@ -209,6 +227,28 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
                   />
                 </div>
               </>
+            )}
+
+            {requestType === "vendor" && (
+              <div>
+                <label className="text-sm dark:text-gray-300">
+                  Nom de la boutique
+                </label>
+                <Field name="restaurantName">
+                  {({ field }: any) => (
+                    <InputText
+                      placeholder="Nom de la boutique"
+                      {...field}
+                      className="w-full text-sm border-2 border-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2 rounded-lg"
+                    />
+                  )}
+                </Field>
+                <ErrorMessage
+                  name="restaurantName"
+                  component="small"
+                  className="p-error text-sm"
+                />
+              </div>
             )}
 
             {/* Phone Number */}

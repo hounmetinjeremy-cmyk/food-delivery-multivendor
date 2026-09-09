@@ -32,4 +32,5 @@ export interface sideCardProps{
     password: string;
     confirmPassword: string;
     termsAccepted: boolean;
+    restaurantName: string;
   }

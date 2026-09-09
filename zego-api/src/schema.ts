@@ -125,6 +125,7 @@ export const schema = createSchema<GraphQLContext>({
       myConversations: [Conversation!]!
       messages(conversationId: ID!): [Message!]!
       ownerSession: OwnerLoginPayload!
+      adminSsoToken: String!
     }
 
     type Mutation {
@@ -431,6 +432,14 @@ export const schema = createSchema<GraphQLContext>({
           .first<UserRow>()
         if (!user) throw new AuthError()
         return buildOwnerSessionPayload(user, ctx)
+      },
+
+      // Short-lived hand-off token so the customer web app can embed the
+      // admin app in an iframe already signed in — minted fresh each time
+      // instead of putting the long-lived session token in a URL.
+      adminSsoToken: async (_parent, _args, ctx) => {
+        const authUser = requireRole(ctx, 'vendor', 'admin')
+        return signJWT({ sub: authUser.sub, role: authUser.role }, ctx.env.JWT_SECRET, 120)
       }
     },
 
