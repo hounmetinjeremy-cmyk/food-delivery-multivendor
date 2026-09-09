@@ -38,4 +38,11 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The embedded rider space (Livreur tab) uses the browser geolocation
+         API for live position tracking. WebView only grants that to a page
+         when the host app itself holds this permission — without it, the
+         page's permission prompt just hangs forever with no native dialog
+         and no error. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 </manifest>
