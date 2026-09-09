@@ -238,7 +238,8 @@ async function recordStatus(ctx: GraphQLContext, orderId: string, status: string
 async function loadRiderProfile(ctx: GraphQLContext, id: string) {
   const row = await ctx.env.DB.prepare(
     `SELECT u.id, u.name, u.email, u.phone, u.image_url, u.is_active, u.created_at, u.updated_at,
-            rp.vehicle_type, rp.zone_id, rp.is_available, rp.rating_avg, rp.rating_count
+            rp.vehicle_type, rp.zone_id, rp.is_available, rp.rating_avg, rp.rating_count,
+            rp.current_wallet_amount, rp.total_wallet_amount, rp.withdrawn_wallet_amount
      FROM users u
      JOIN rider_profiles rp ON rp.user_id = u.id
      WHERE u.id = ? AND u.role = 'rider'`
@@ -258,6 +259,9 @@ async function loadRiderProfile(ctx: GraphQLContext, id: string) {
       is_available: number
       rating_avg: number
       rating_count: number
+      current_wallet_amount: number
+      total_wallet_amount: number
+      withdrawn_wallet_amount: number
     }>()
   if (!row) return null
   const location = await ctx.env.DB.prepare(
@@ -285,9 +289,9 @@ async function loadRiderProfile(ctx: GraphQLContext, id: string) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     accountNumber: null,
-    currentWalletAmount: 0,
-    totalWalletAmount: 0,
-    withdrawnWalletAmount: 0,
+    currentWalletAmount: row.current_wallet_amount,
+    totalWalletAmount: row.total_wallet_amount,
+    withdrawnWalletAmount: row.withdrawn_wallet_amount,
     licenseDetails: null,
     vehicleDetails: null,
     bussinessDetails: null,
@@ -308,6 +312,7 @@ export const orderTypeDefs = /* GraphQL */ `
     ordersByRestIdWithoutPagination(restaurant: String!, search: String): [Order!]!
     riderOrders(limit: Int, offset: Int): [Order!]!
     rider(id: String!): Rider
+    transactionHistory(limit: Int, offset: Int): [RiderWalletTransaction!]!
   }
 
   extend type Mutation {
@@ -377,6 +382,14 @@ export const orderTypeDefs = /* GraphQL */ `
   type RiderBussinessDetails { bankName: String accountName: String accountCode: String accountNumber: String }
   type WorkScheduleSlot { startTime: String endTime: String }
   type WorkScheduleDay { day: String enabled: Boolean slots: [WorkScheduleSlot!]! }
+
+  type RiderWalletTransaction {
+    id: ID!
+    amount: Float!
+    type: String!
+    orderId: String
+    createdAt: String!
+  }
 
   type OrderVariation { _id: ID! id: ID! title: String price: Float discounted: Float }
   type OrderAddonOption { _id: ID! id: ID! title: String description: String price: Float }
@@ -750,6 +763,33 @@ export const orderResolvers = {
     rider: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireUser(ctx)
       return loadRiderProfile(ctx, args.id)
+    },
+
+    transactionHistory: async (
+      _p: unknown,
+      args: { limit?: number; offset?: number },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, 'rider')
+      const { results } = await ctx.env.DB.prepare(
+        `SELECT id, amount, type, order_id, created_at FROM rider_wallet_transactions
+         WHERE rider_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      )
+        .bind(user.sub, args.limit ?? 50, args.offset ?? 0)
+        .all<{
+          id: string
+          amount: number
+          type: string
+          order_id: string | null
+          created_at: string
+        }>()
+      return results.map((r) => ({
+        id: r.id,
+        amount: r.amount,
+        type: r.type,
+        orderId: r.order_id,
+        createdAt: r.created_at
+      }))
     }
   },
 
@@ -1104,6 +1144,20 @@ export const orderResolvers = {
         .bind(args.status, args.id)
         .run()
       await recordStatus(ctx, args.id, args.status)
+      if (args.status === 'DELIVERED') {
+        await ctx.env.DB.prepare(
+          `UPDATE rider_profiles SET current_wallet_amount = current_wallet_amount + ?,
+             total_wallet_amount = total_wallet_amount + ? WHERE user_id = ?`
+        )
+          .bind(row.delivery_charges, row.delivery_charges, user.sub)
+          .run()
+        await ctx.env.DB.prepare(
+          `INSERT INTO rider_wallet_transactions (id, rider_id, order_id, amount, type)
+           VALUES (?, ?, ?, ?, 'delivery_earning')`
+        )
+          .bind(newId(), user.sub, args.id, row.delivery_charges)
+          .run()
+      }
       const updated = await findOrderRow(ctx, args.id)
       return mapOrder(updated!, ctx)
     },
