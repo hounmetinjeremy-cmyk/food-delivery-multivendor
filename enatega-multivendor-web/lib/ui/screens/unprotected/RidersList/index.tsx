@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhone, faCommentDots, faMotorcycle, faStar } from "@fortawesome/free-solid-svg-icons";
 
 import { zegoApiFetch, getZegoApiToken } from "@/lib/zego-api/client";
+import LeafletMap from "@/lib/ui/useable-components/leaflet-map/dynamic";
+import type { ILeafletMapMarker } from "@/lib/ui/useable-components/leaflet-map";
 
 interface Rider {
   id: string;
@@ -15,6 +17,7 @@ interface Rider {
   vehicleType: string | null;
   ratingAvg: number;
   ratingCount: number;
+  location: { coordinates: [number, number] } | null;
 }
 
 const AVAILABLE_RIDERS_QUERY = /* GraphQL */ `
@@ -27,6 +30,9 @@ const AVAILABLE_RIDERS_QUERY = /* GraphQL */ `
       vehicleType
       ratingAvg
       ratingCount
+      location {
+        coordinates
+      }
     }
   }
 `;
@@ -80,6 +86,21 @@ export default function RidersList() {
     }
   };
 
+  const ridersWithLocation = riders.filter((rider) => rider.location);
+  const markers: ILeafletMapMarker[] = ridersWithLocation.map((rider) => ({
+    lat: Number(rider.location!.coordinates[1]),
+    lng: Number(rider.location!.coordinates[0]),
+    label: rider.name,
+    onClick: () => handleMessage(rider.id),
+  }));
+  const mapCenter = useMemo(() => {
+    if (ridersWithLocation.length > 0) {
+      const [lng, lat] = ridersWithLocation[0].location!.coordinates;
+      return { lat: Number(lat), lng: Number(lng) };
+    }
+    return null;
+  }, [ridersWithLocation]);
+
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6">
       <h1 className="mb-4 text-2xl font-semibold text-dispatch-ink dark:text-white">
@@ -98,6 +119,12 @@ export default function RidersList() {
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Aucun livreur disponible pour le moment.
         </p>
+      )}
+
+      {mapCenter && (
+        <div className="mb-4">
+          <LeafletMap height="40vh" center={mapCenter} zoom={13} markers={markers} fitToContent />
+        </div>
       )}
 
       <ul className="flex flex-col gap-3">

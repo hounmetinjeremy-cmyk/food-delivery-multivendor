@@ -733,8 +733,12 @@ export const orderResolvers = {
       const user = requireRole(ctx, 'rider')
       const limit = args.limit ?? 50
       const offset = args.offset ?? 0
+      // Rider apps bucket a single list client-side into "new" (unassigned,
+      // ready for pickup) vs "processing" (already claimed by me) — so this
+      // returns both: orders already assigned to this rider, plus unclaimed
+      // ones any rider can pick up.
       const { results } = await ctx.env.DB.prepare(
-        `${ORDER_SELECT} WHERE o.rider_id = ?
+        `${ORDER_SELECT} WHERE (o.rider_id = ? OR (o.rider_id IS NULL AND o.order_status = 'ACCEPTED'))
            AND o.order_status NOT IN ('DELIVERED','COMPLETED','CANCELLED')
          ORDER BY o.created_at DESC LIMIT ? OFFSET ?`
       )

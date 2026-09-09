@@ -319,9 +319,11 @@ export const schema = createSchema<GraphQLContext>({
       availableRiders: async (_parent, _args, ctx) => {
         const { results } = await ctx.env.DB.prepare(
           `SELECT u.id, u.name, u.phone, u.image_url,
-                  rp.vehicle_type, rp.rating_avg, rp.rating_count
+                  rp.vehicle_type, rp.rating_avg, rp.rating_count,
+                  rl.lat, rl.lng
            FROM rider_profiles rp
            JOIN users u ON u.id = rp.user_id
+           LEFT JOIN rider_locations rl ON rl.rider_id = u.id
            WHERE rp.is_available = 1 AND u.is_active = 1
            ORDER BY rp.rating_avg DESC`
         ).all<{
@@ -332,6 +334,8 @@ export const schema = createSchema<GraphQLContext>({
           vehicle_type: string | null
           rating_avg: number
           rating_count: number
+          lat: number | null
+          lng: number | null
         }>()
         return results.map((r) => ({
           id: r.id,
@@ -340,7 +344,9 @@ export const schema = createSchema<GraphQLContext>({
           imageUrl: r.image_url,
           vehicleType: r.vehicle_type,
           ratingAvg: r.rating_avg,
-          ratingCount: r.rating_count
+          ratingCount: r.rating_count,
+          location:
+            r.lat != null && r.lng != null ? { coordinates: [r.lng, r.lat] } : null
         }))
       },
 
