@@ -61,7 +61,7 @@ export const ConfigurationProvider = ({
   const configuredGoogleClientId =
     sharedConfiguration.webClientID ??
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ??
-    "545417768480-qp2qi2psh0862m67oqsj1ules76jhqsf.apps.googleusercontent.com";
+    "545417768480-4l1rmpk3iq7jcsga2bi8jk0o6d1uqq6p.apps.googleusercontent.com";
   const GOOGLE_CLIENT_ID = GOOGLE_WEB_CLIENT_ID_REGEX.test(
     configuredGoogleClientId ?? "",
   )
