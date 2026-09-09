@@ -54,9 +54,13 @@ export default function LoginWithGoogle({
         });
         isNativeInitialized.current = true;
       }
+      // email/profile/openid are already requested by default on Android —
+      // passing custom scopes here requires modifying MainActivity, which
+      // we don't need since the defaults already cover what googleLogin()
+      // reads out of the ID token.
       const { result } = await SocialLogin.login({
         provider: "google",
-        options: { scopes: ["email", "profile"] },
+        options: {},
       });
       const idToken = "idToken" in result ? result.idToken : null;
       if (!idToken) {
