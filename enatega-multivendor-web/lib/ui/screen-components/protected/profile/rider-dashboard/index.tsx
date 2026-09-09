@@ -268,6 +268,14 @@ export default function RiderDashboard() {
         </button>
       </div>
 
+      <button
+        type="button"
+        onClick={() => router.push("/profile/rider-profile-details")}
+        className="mb-6 text-sm font-medium text-primary-color underline"
+      >
+        Véhicule, permis, coordonnées bancaires et horaires
+      </button>
+
       {myLocation && (
         <div className="mb-6">
           <LeafletMap height="30vh" center={myLocation} zoom={14} markers={markers} />

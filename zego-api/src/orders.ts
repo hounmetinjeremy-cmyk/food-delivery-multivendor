@@ -235,11 +235,30 @@ async function recordStatus(ctx: GraphQLContext, orderId: string, status: string
 // A rider row (users + rider_profiles), shaped for the admin/rider apps'
 // richer "Rider" type — separate from the lean customer-facing shape
 // returned by availableRiders in schema.ts.
+interface WorkScheduleDayRow {
+  day: string
+  enabled: boolean
+  slots: { startTime: string; endTime: string }[]
+}
+
+function parseWorkSchedule(raw: string | null): WorkScheduleDayRow[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 async function loadRiderProfile(ctx: GraphQLContext, id: string) {
   const row = await ctx.env.DB.prepare(
     `SELECT u.id, u.name, u.email, u.phone, u.image_url, u.is_active, u.created_at, u.updated_at,
             rp.vehicle_type, rp.zone_id, rp.is_available, rp.rating_avg, rp.rating_count,
-            rp.current_wallet_amount, rp.total_wallet_amount, rp.withdrawn_wallet_amount
+            rp.current_wallet_amount, rp.total_wallet_amount, rp.withdrawn_wallet_amount,
+            rp.vehicle_number, rp.vehicle_image, rp.license_number, rp.license_expiry_date,
+            rp.license_image, rp.bank_name, rp.bank_account_name, rp.bank_account_code,
+            rp.bank_account_number, rp.time_zone, rp.work_schedule
      FROM users u
      JOIN rider_profiles rp ON rp.user_id = u.id
      WHERE u.id = ? AND u.role = 'rider'`
@@ -262,6 +281,17 @@ async function loadRiderProfile(ctx: GraphQLContext, id: string) {
       current_wallet_amount: number
       total_wallet_amount: number
       withdrawn_wallet_amount: number
+      vehicle_number: string | null
+      vehicle_image: string | null
+      license_number: string | null
+      license_expiry_date: string | null
+      license_image: string | null
+      bank_name: string | null
+      bank_account_name: string | null
+      bank_account_code: string | null
+      bank_account_number: string | null
+      time_zone: string | null
+      work_schedule: string | null
     }>()
   if (!row) return null
   const location = await ctx.env.DB.prepare(
@@ -292,11 +322,29 @@ async function loadRiderProfile(ctx: GraphQLContext, id: string) {
     currentWalletAmount: row.current_wallet_amount,
     totalWalletAmount: row.total_wallet_amount,
     withdrawnWalletAmount: row.withdrawn_wallet_amount,
-    licenseDetails: null,
-    vehicleDetails: null,
-    bussinessDetails: null,
-    timeZone: null,
-    workSchedule: []
+    licenseDetails:
+      row.license_number || row.license_expiry_date || row.license_image
+        ? {
+            number: row.license_number,
+            expiryDate: row.license_expiry_date,
+            image: row.license_image
+          }
+        : null,
+    vehicleDetails:
+      row.vehicle_number || row.vehicle_image
+        ? { number: row.vehicle_number, image: row.vehicle_image }
+        : null,
+    bussinessDetails:
+      row.bank_name || row.bank_account_name || row.bank_account_code || row.bank_account_number
+        ? {
+            bankName: row.bank_name,
+            accountName: row.bank_account_name,
+            accountCode: row.bank_account_code,
+            accountNumber: row.bank_account_number
+          }
+        : null,
+    timeZone: row.time_zone,
+    workSchedule: parseWorkSchedule(row.work_schedule)
   }
 }
 
@@ -345,7 +393,17 @@ export const orderTypeDefs = /* GraphQL */ `
       speed: Float
       deviceTimestamp: String
     ): Rider!
+    updateRiderVehicleDetails(id: String!, vehicleType: String, vehicleDetails: VehicleDetailsInput): Rider!
+    updateRiderLicenseDetails(id: String!, licenseDetails: LicenseDetailsInput): Rider!
+    updateRiderBussinessDetails(id: String!, bussinessDetails: BussinessDetailsInput): Rider!
+    updateWorkSchedule(riderId: String!, workSchedule: [DayScheduleInput!]!, timeZone: String): Rider!
   }
+
+  input VehicleDetailsInput { number: String image: String }
+  input LicenseDetailsInput { number: String expiryDate: String image: String }
+  input BussinessDetailsInput { bankName: String accountName: String accountCode: String accountNumber: String }
+  input WorkScheduleSlotInput { startTime: String! endTime: String! }
+  input DayScheduleInput { day: String! enabled: Boolean! slots: [WorkScheduleSlotInput!] }
 
   extend type Rider {
     _id: ID!
@@ -1224,6 +1282,107 @@ export const orderResolvers = {
          ON CONFLICT(rider_id) DO UPDATE SET lat = excluded.lat, lng = excluded.lng, updated_at = datetime('now')`
       )
         .bind(user.sub, Number(args.latitude), Number(args.longitude))
+        .run()
+      return loadRiderProfile(ctx, user.sub)
+    },
+
+    updateRiderVehicleDetails: async (
+      _p: unknown,
+      args: {
+        id: string
+        vehicleType?: string
+        vehicleDetails?: { number?: string; image?: string }
+      },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, 'rider')
+      if (args.id !== user.sub) throw new AuthError('Forbidden')
+      await ctx.env.DB.prepare(
+        `UPDATE rider_profiles SET
+           vehicle_type = COALESCE(?, vehicle_type),
+           vehicle_number = COALESCE(?, vehicle_number),
+           vehicle_image = COALESCE(?, vehicle_image)
+         WHERE user_id = ?`
+      )
+        .bind(
+          args.vehicleType ?? null,
+          args.vehicleDetails?.number ?? null,
+          args.vehicleDetails?.image ?? null,
+          user.sub
+        )
+        .run()
+      return loadRiderProfile(ctx, user.sub)
+    },
+
+    updateRiderLicenseDetails: async (
+      _p: unknown,
+      args: { id: string; licenseDetails?: { number?: string; expiryDate?: string; image?: string } },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, 'rider')
+      if (args.id !== user.sub) throw new AuthError('Forbidden')
+      await ctx.env.DB.prepare(
+        `UPDATE rider_profiles SET
+           license_number = COALESCE(?, license_number),
+           license_expiry_date = COALESCE(?, license_expiry_date),
+           license_image = COALESCE(?, license_image)
+         WHERE user_id = ?`
+      )
+        .bind(
+          args.licenseDetails?.number ?? null,
+          args.licenseDetails?.expiryDate ?? null,
+          args.licenseDetails?.image ?? null,
+          user.sub
+        )
+        .run()
+      return loadRiderProfile(ctx, user.sub)
+    },
+
+    updateRiderBussinessDetails: async (
+      _p: unknown,
+      args: {
+        id: string
+        bussinessDetails?: {
+          bankName?: string
+          accountName?: string
+          accountCode?: string
+          accountNumber?: string
+        }
+      },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, 'rider')
+      if (args.id !== user.sub) throw new AuthError('Forbidden')
+      await ctx.env.DB.prepare(
+        `UPDATE rider_profiles SET
+           bank_name = COALESCE(?, bank_name),
+           bank_account_name = COALESCE(?, bank_account_name),
+           bank_account_code = COALESCE(?, bank_account_code),
+           bank_account_number = COALESCE(?, bank_account_number)
+         WHERE user_id = ?`
+      )
+        .bind(
+          args.bussinessDetails?.bankName ?? null,
+          args.bussinessDetails?.accountName ?? null,
+          args.bussinessDetails?.accountCode ?? null,
+          args.bussinessDetails?.accountNumber ?? null,
+          user.sub
+        )
+        .run()
+      return loadRiderProfile(ctx, user.sub)
+    },
+
+    updateWorkSchedule: async (
+      _p: unknown,
+      args: { riderId: string; workSchedule: WorkScheduleDayRow[]; timeZone?: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, 'rider')
+      if (args.riderId !== user.sub) throw new AuthError('Forbidden')
+      await ctx.env.DB.prepare(
+        `UPDATE rider_profiles SET work_schedule = ?, time_zone = COALESCE(?, time_zone) WHERE user_id = ?`
+      )
+        .bind(JSON.stringify(args.workSchedule), args.timeZone ?? null, user.sub)
         .run()
       return loadRiderProfile(ctx, user.sub)
     }
