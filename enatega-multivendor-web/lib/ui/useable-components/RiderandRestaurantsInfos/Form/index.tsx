@@ -10,10 +10,15 @@ import { Checkbox } from "primereact/checkbox";
 import { Button } from "primereact/button";
 
 // libraries and utils
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import "react-phone-input-2/lib/style.css";
-import { zegoApiFetch, setZegoApiToken } from "@/lib/zego-api/client";
+import {
+  zegoApiFetch,
+  setZegoApiToken,
+  getZegoApiUserId,
+} from "@/lib/zego-api/client";
 import { APK_DOWNLOAD_URL } from "@/lib/utils/constants/apk";
 
 // interfcaes
@@ -54,6 +59,20 @@ interface SubmitPartnerRequestResponse {
   };
 }
 
+const ME_QUERY = /* GraphQL */ `
+  query Me {
+    me {
+      email
+      phone
+      name
+    }
+  }
+`;
+
+interface MeResponse {
+  me: { email: string | null; phone: string | null; name: string };
+}
+
 const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
   const { showToast } = useToast();
   const router = useRouter();
@@ -61,14 +80,38 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
   // Already signed in with Google (the normal case when this form is opened
   // from Profile)? Then we already know who they are — don't make them
   // retype their name/email or invent a separate password for this account.
+  // The legacy auth context is checked first, but it isn't always populated
+  // right after a Google sign-in — the zego-api session (which powers the
+  // Livreur/Messagerie tabs) is the reliable source, so fall back to it via
+  // its own `me` query.
   const { user } = useAuth();
-  const isAuthenticated = Boolean(user?.email);
+  const hasZegoSession = Boolean(getZegoApiUserId());
+  const [zegoMe, setZegoMe] = useState<MeResponse["me"] | null>(null);
+  const [isZegoMeLoading, setIsZegoMeLoading] = useState(hasZegoSession);
+
+  useEffect(() => {
+    if (!hasZegoSession) return;
+    zegoApiFetch<MeResponse>(ME_QUERY)
+      .then((data) => setZegoMe(data.me))
+      .catch(() => setZegoMe(null))
+      .finally(() => setIsZegoMeLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const effectiveEmail = user?.email ?? zegoMe?.email ?? "";
+  const effectiveName = user?.name ?? zegoMe?.name ?? "";
+  const effectivePhone = user?.phone ?? zegoMe?.phone ?? "";
+  const isAuthenticated = Boolean(effectiveEmail);
+  // Waiting on the zego-api profile and nothing else has already confirmed
+  // who's asking — avoid flashing the full signup form only to swap it out
+  // a moment later once the session resolves.
+  const isCheckingSession = isZegoMeLoading && !user?.email;
 
   const initialValues: VendorFormValues = {
-    firstName: user?.name?.split(" ")[0] ?? "",
-    lastName: user?.name?.split(" ").slice(1).join(" ") ?? "",
-    phoneNumber: user?.phone ?? "",
-    email: user?.email ?? "",
+    firstName: effectiveName.split(" ")[0] ?? "",
+    lastName: effectiveName.split(" ").slice(1).join(" ") ?? "",
+    phoneNumber: effectivePhone,
+    email: effectiveEmail,
     password: "",
     confirmPassword: "",
     termsAccepted: false,
@@ -169,6 +212,14 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
     );
   }
 
+  if (isCheckingSession) {
+    return (
+      <div className="p-6 max-w-xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-m my-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        {t("loading_orders")}
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-m my-6">
       <h2 className="text-[20px] font-semibold mb-6 dark:text-gray-100">
@@ -189,7 +240,7 @@ const EmailForm: React.FC<formProps> = ({ heading, role, requestType }) => {
               <div className="rounded-lg bg-gray-50 dark:bg-gray-700 p-3 text-sm dark:text-gray-200">
                 <p>{t("signed_in_with_google_message")}</p>
                 <p className="font-medium mt-1">
-                  {user?.name} · {user?.email}
+                  {effectiveName} · {effectiveEmail}
                 </p>
               </div>
             ) : (

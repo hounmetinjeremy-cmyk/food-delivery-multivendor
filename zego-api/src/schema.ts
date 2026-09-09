@@ -129,6 +129,15 @@ export const schema = createSchema<GraphQLContext>({
       ownerSession: OwnerLoginPayload!
       adminSsoToken: String!
       riderSsoToken: RiderSsoPayload!
+      me: Me!
+    }
+
+    type Me {
+      id: ID!
+      email: String
+      phone: String
+      name: String!
+      role: String!
     }
 
     type RiderSsoPayload {
@@ -294,6 +303,21 @@ export const schema = createSchema<GraphQLContext>({
       ...catalogResolvers.Query,
       ...orderResolvers.Query,
       health: () => 'ok',
+
+      // Lets any signed-in screen (e.g. the partner-request form) prefill
+      // the caller's own email/name instead of asking them to retype it —
+      // works off the zego-api session token alone, no separate profile
+      // fetch against another backend needed.
+      me: async (_parent, _args, ctx) => {
+        const authUser = requireUser(ctx)
+        const user = await ctx.env.DB.prepare(
+          'SELECT id, email, phone, name, role FROM users WHERE id = ?'
+        )
+          .bind(authUser.sub)
+          .first<{ id: string; email: string | null; phone: string | null; name: string; role: string }>()
+        if (!user) throw new AuthError()
+        return user
+      },
 
       configuration: async (_parent, _args, ctx) => {
         const appConfig = await ctx.env.DB.prepare(
