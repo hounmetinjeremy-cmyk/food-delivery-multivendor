@@ -6,16 +6,16 @@ import { ILocationPermissionComponentProps } from "@/lib/utils/interfaces";
 // lib/services/geo-foreground-permission.web.ts for why. Native (iOS/
 // Android) behavior and this screen's own logic are unchanged.
 import * as Location from "../../../services/geo-foreground-permission";
+// Same reasoning, for the same reason: react-native-web's Alert.alert is a
+// no-op, so the "permission denied" fallback needs a web-safe version too —
+// see lib/services/location-alert.web.ts.
+import {
+  showLocationAccessAlert,
+  showPermissionCheckAlert,
+} from "../../../services/location-alert";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  AppState,
-  Linking,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { AppState, Text, TouchableOpacity, View } from "react-native";
 import Modal from "react-native-modal";
 import SpinnerComponent from "../spinner";
 
@@ -51,18 +51,7 @@ export default function LocationPermissionComponent({
   }, [setLocationPermission]);
 
   const LocationAlert = async () => {
-    Alert.alert(
-      "Location access",
-      "Location permissions are required to use this app. Kindly open settings to allow location access.",
-      [
-        {
-          text: "Open settings",
-          onPress: async () => {
-            await Linking.openSettings();
-          },
-        },
-      ],
-    );
+    showLocationAccessAlert();
     const { status } = await Location.getForegroundPermissionsAsync();
     if (status === "granted") {
       setLocationPermission(true);
@@ -102,7 +91,7 @@ export default function LocationPermissionComponent({
       if (__DEV__) {
         console.log("Unable to request background location permission", error);
       }
-      Alert.alert(t("Location access"), t("Please check for permissions"));
+      showPermissionCheckAlert(t("Location access"), t("Please check for permissions"));
     } finally {
       setBackgroundPermissionLoading(false);
     }
