@@ -3,6 +3,10 @@
 // https://forums.expo.dev/t/location-getcurrentpositionasync-takes-10-seconds/19714/2
 
 import * as Location from 'expo-location'
+// Same reasoning, for the same reason: expo-location's web permission check
+// is unreliable in an Android WebView cross-origin iframe — see
+// src/services/foreground-location-permission.web.js.
+import { useForegroundPermissions } from '../../services/foreground-location-permission'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { useEffect } from 'react'
@@ -17,7 +21,7 @@ export const LOCATION_STORAGE_KEY = 'lastKnownLocation'
 const LOCATION_UPDATES_DISTANCE = 100 // meters
 
 const useWatchLocation = () => {
-  const [permission, requestPermission] = Location.useForegroundPermissions()
+  const [permission, requestPermission] = useForegroundPermissions()
   const watchPositionCallback = async ({ coords }) => {
     await AsyncStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify({ ...coords }))
   }

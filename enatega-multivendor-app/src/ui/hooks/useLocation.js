@@ -1,4 +1,12 @@
 import * as Location from 'expo-location'
+// Routed through a local wrapper (not "expo-location" directly) so Metro's
+// platform resolution can swap in a web-safe permission check — see
+// src/services/foreground-location-permission.web.js for why. Native
+// behavior and this hook's own logic are unchanged.
+import {
+  getForegroundPermissionsAsync,
+  requestForegroundPermissionsAsync
+} from '../../services/foreground-location-permission'
 import { getLocationFromStorage } from './useWatchLocation'
 
 export default function useLocation() {
@@ -6,7 +14,7 @@ export default function useLocation() {
     const {
       status,
       canAskAgain
-    } = await Location.getForegroundPermissionsAsync()
+    } = await getForegroundPermissionsAsync()
     return { status, canAskAgain }
   }
 
@@ -16,7 +24,7 @@ export default function useLocation() {
     const {
       status: currentStatus,
       canAskAgain: currentCanAskAgain
-    } = await Location.getForegroundPermissionsAsync()
+    } = await getForegroundPermissionsAsync()
     finalStatus = currentStatus === 'granted' ? 'granted' : 'denied'
     finalCanAskAgain = currentCanAskAgain
     if (currentStatus === 'granted') {
@@ -26,7 +34,7 @@ export default function useLocation() {
       const {
         status,
         canAskAgain
-      } = await Location.requestForegroundPermissionsAsync()
+      } = await requestForegroundPermissionsAsync()
       finalStatus = status === 'granted' ? 'granted' : 'denied'
       finalCanAskAgain = canAskAgain
       if (status === 'granted') {

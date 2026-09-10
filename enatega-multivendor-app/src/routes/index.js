@@ -436,7 +436,10 @@ function AppContainer() {
   // Handlers
   const init = async () => {
     try {
-      const Location = await import('expo-location')
+      // Routed through a local wrapper (not "expo-location" directly) so
+      // Metro's platform resolution can swap in a web-safe permission check —
+      // see src/services/foreground-location-permission.web.js for why.
+      const Location = await import('../services/foreground-location-permission')
       const permission_state = await Location.getForegroundPermissionsAsync()
       console.log({permission_state})
 

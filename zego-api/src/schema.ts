@@ -1,4 +1,5 @@
 import { createSchema } from 'graphql-yoga'
+import { GraphQLError } from 'graphql'
 import { signJWT, verifyJWT, verifyPassword } from './auth'
 import { verifyGoogleIdToken } from './google'
 import { AuthError, requireUser, requireRole, type GraphQLContext } from './context'
@@ -132,6 +133,22 @@ export const schema = createSchema<GraphQLContext>({
       customerSsoToken: CustomerSsoPayload!
       me: Me!
       profile: Profile!
+      zones: [Zone!]!
+    }
+
+    type Zone {
+      _id: ID!
+      title: String!
+      description: String
+      location: ZonePolygon
+      isActive: Boolean!
+    }
+
+    # A single-ring polygon, GeoJSON-style: coordinates[0] is the ring, each
+    # point is [longitude, latitude] — same lng/lat order Location already
+    # uses elsewhere in this schema.
+    type ZonePolygon {
+      coordinates: [[[Float!]!]!]!
     }
 
     type Me {
@@ -184,6 +201,16 @@ export const schema = createSchema<GraphQLContext>({
       uploadImageToS3(image: String!): UploadedImage!
       ownerLogin(email: String!, password: String!): OwnerLoginPayload!
       refreshToken(refreshToken: String!, userType: String!): RefreshPayload!
+      createZone(zone: ZoneInput!): Zone!
+      editZone(zone: ZoneInput!): Zone!
+      deleteZone(id: String!): Zone!
+    }
+
+    input ZoneInput {
+      _id: String
+      title: String!
+      description: String
+      coordinates: [[[Float!]!]!]!
     }
 
     type OwnerLoginPayload {
@@ -567,12 +594,101 @@ export const schema = createSchema<GraphQLContext>({
               a.lat != null && a.lng != null ? { coordinates: [a.lng, a.lat] } : null
           }))
         }
+      },
+
+      // Backs enatega-multivendor-app's own zones query (its LocationContext
+      // shows these as "cities" a customer can pick, and matches their GPS
+      // position against each zone's polygon before letting them proceed
+      // past the location screen). coordinates is stored as a single ring of
+      // [longitude, latitude] points, same order Location already uses.
+      zones: async (_parent, _args, ctx) => {
+        const { results } = await ctx.env.DB.prepare(
+          'SELECT id, title, description, coordinates, is_active FROM zones'
+        )
+          .all<{
+            id: string
+            title: string
+            description: string | null
+            coordinates: string
+            is_active: number
+          }>()
+        return results.map((z) => ({
+          _id: z.id,
+          title: z.title,
+          description: z.description,
+          isActive: z.is_active !== 0,
+          location: { coordinates: [JSON.parse(z.coordinates)] }
+        }))
       }
     },
 
     Mutation: {
       ...catalogResolvers.Mutation,
       ...orderResolvers.Mutation,
+      createZone: async (
+        _parent,
+        args: { zone: { title: string; description?: string; coordinates: number[][][] } },
+        ctx
+      ) => {
+        const id = newId()
+        const coordinates = JSON.stringify(args.zone.coordinates[0] ?? [])
+        await ctx.env.DB.prepare(
+          'INSERT INTO zones (id, title, description, coordinates, is_active) VALUES (?, ?, ?, ?, 1)'
+        )
+          .bind(id, args.zone.title, args.zone.description ?? null, coordinates)
+          .run()
+        return {
+          _id: id,
+          title: args.zone.title,
+          description: args.zone.description ?? null,
+          isActive: true,
+          location: { coordinates: [args.zone.coordinates[0] ?? []] }
+        }
+      },
+
+      editZone: async (
+        _parent,
+        args: { zone: { _id: string; title: string; description?: string; coordinates: number[][][] } },
+        ctx
+      ) => {
+        const coordinates = JSON.stringify(args.zone.coordinates[0] ?? [])
+        await ctx.env.DB.prepare(
+          'UPDATE zones SET title = ?, description = ?, coordinates = ? WHERE id = ?'
+        )
+          .bind(args.zone.title, args.zone.description ?? null, coordinates, args.zone._id)
+          .run()
+        const row = await ctx.env.DB.prepare(
+          'SELECT id, title, description, coordinates, is_active FROM zones WHERE id = ?'
+        )
+          .bind(args.zone._id)
+          .first<{ id: string; title: string; description: string | null; coordinates: string; is_active: number }>()
+        if (!row) throw new GraphQLError('Zone not found')
+        return {
+          _id: row.id,
+          title: row.title,
+          description: row.description,
+          isActive: row.is_active !== 0,
+          location: { coordinates: [JSON.parse(row.coordinates)] }
+        }
+      },
+
+      deleteZone: async (_parent, args: { id: string }, ctx) => {
+        const row = await ctx.env.DB.prepare(
+          'SELECT id, title, description, coordinates, is_active FROM zones WHERE id = ?'
+        )
+          .bind(args.id)
+          .first<{ id: string; title: string; description: string | null; coordinates: string; is_active: number }>()
+        if (!row) throw new GraphQLError('Zone not found')
+        await ctx.env.DB.prepare('DELETE FROM zones WHERE id = ?').bind(args.id).run()
+        return {
+          _id: row.id,
+          title: row.title,
+          description: row.description,
+          isActive: row.is_active !== 0,
+          location: { coordinates: [JSON.parse(row.coordinates)] }
+        }
+      },
+
       continueWithGoogle: async (_parent, args: { idToken: string }, ctx) => {
         const user = await upsertGoogleUser(args.idToken, ctx)
         const token = await signJWT(
