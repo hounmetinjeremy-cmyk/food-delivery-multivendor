@@ -6,14 +6,14 @@ import ProfileTabs from "@/lib/ui/screen-components/protected/layout/profile/pro
 import ProfileModeSwitcher from "@/lib/ui/screen-components/protected/layout/profile/profile-mode-switcher";
 import { PaddingContainer } from "@/lib/ui/useable-components/containers";
 import { IProtectedProfileLayoutComponent } from "@/lib/utils/interfaces";
-import { isImmersiveProfileRoute } from "@/lib/utils/methods/helpers";
+import { isImmersiveEmbedRoute } from "@/lib/utils/methods/helpers";
 
 export default function ProfileLayout({
   children,
 }: IProtectedProfileLayoutComponent) {
   const pathname = usePathname() ?? "";
 
-  if (isImmersiveProfileRoute(pathname)) {
+  if (isImmersiveEmbedRoute(pathname)) {
     return (
       <div className="flex h-full min-h-0 w-full flex-col">
         <ProfileModeSwitcher />

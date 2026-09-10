@@ -22,11 +22,11 @@ import { useSearchUI } from "@/lib/context/search/search.context";
 import { useAuth } from "@/lib/context/auth/auth.context";
 import { usePathname } from "next/navigation";
 import { hasValidAuthToken } from "@/lib/utils/methods/auth";
-import { isImmersiveProfileRoute } from "@/lib/utils/methods/helpers";
+import { isImmersiveEmbedRoute } from "@/lib/utils/methods/helpers";
 
 const AppLayout = ({ children }: IProvider) => {
   const pathname = usePathname();
-  const immersive = isImmersiveProfileRoute(pathname ?? "");
+  const immersive = isImmersiveEmbedRoute(pathname ?? "");
   const [isScrolled, setIsScrolled] = useState(false);
   // Hooks
   const { isAuthModalVisible, setIsAuthModalVisible, setActivePanel } = useAuth();

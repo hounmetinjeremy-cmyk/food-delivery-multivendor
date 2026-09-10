@@ -1,5 +1,5 @@
-import ModeHome from "@/lib/ui/screens/unprotected/ModeHome";
+import ClientAppEmbed from "@/lib/ui/screen-components/protected/profile/client-app";
 
 export default function RootPage() {
-  return <ModeHome />;
+  return <ClientAppEmbed />;
 }
