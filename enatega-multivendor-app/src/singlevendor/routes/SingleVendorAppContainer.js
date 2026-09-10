@@ -66,6 +66,10 @@ import { StripeProvider } from '../../services/stripe-native'
 import ConfigurationContext from '../../context/Configuration'
 import SingleVendorPaymentCheckout from '../screens/Checkout/SingleVendorPaymentCheckout'
 import * as Notifications from 'expo-notifications'
+// Same reasoning, for the same reason: expo-notifications' web
+// useLastNotificationResponse throws — see
+// src/services/last-notification-response.web.js.
+import { useLastNotificationResponse } from '../../services/last-notification-response'
 import { APP_MODES } from '../../mode/constants'
 import {
   consumePendingOrderNavigation,
@@ -203,7 +207,7 @@ function MainNavigator() {
 }
 
 function SingleVendorAppContainer() {
-  const lastNotificationResponse = Notifications.useLastNotificationResponse()
+  const lastNotificationResponse = useLastNotificationResponse()
   const handleNotification = useCallback(async response => {
     const data = response.notification.request.content.data
     const notificationMode = await inferNotificationMode(data)

@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-location/build/LocationSubscribers.js b/node_modules/expo-location/build/LocationSubscribers.js
+index e528ff3..e1e4c8c 100644
+--- a/node_modules/expo-location/build/LocationSubscribers.js
++++ b/node_modules/expo-location/build/LocationSubscribers.js
+@@ -47,7 +47,7 @@ class Subscriber {
+         delete this.callbacks[id];
+         ExpoLocation.removeWatchAsync(id);
+         if (Object.keys(this.callbacks).length === 0 && this.eventSubscription) {
+-            LocationEventEmitter.removeSubscription(this.eventSubscription);
++            this.eventSubscription.remove();
+             this.eventSubscription = null;
+         }
+     }

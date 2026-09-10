@@ -5,6 +5,11 @@ import * as Linking from 'expo-linking'
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack'
 import navigationService from './navigationService'
 import * as Notifications from 'expo-notifications'
+// Routed through a local wrapper (not Notifications.useLastNotificationResponse
+// directly) so Metro's platform resolution can swap in a web-safe stub — see
+// src/services/last-notification-response.web.js for why. Native behavior
+// and the rest of this file's own logic are unchanged.
+import { useLastNotificationResponse } from '../services/last-notification-response'
 import Login from '../screens/Login/Login'
 import Register from '../screens/Register/Register'
 import ForgotPassword from '../screens/ForgotPassword/ForgotPassword'
@@ -385,7 +390,7 @@ function AppContainer() {
   const { permissionState, setPermissionState, location, isLocationLoaded } = useContext(LocationContext)
   const configuration = useContext(ConfigurationContext)
   const { isLoggedIn } = useContext(UserContext)
-  const lastNotificationResponse = Notifications.useLastNotificationResponse()
+  const lastNotificationResponse = useLastNotificationResponse()
   const isConfigurationLoaded = configuration?.isConfigurationLoaded
   const enableCustomerDemoMode = !!configuration?.enableCustomerDemoMode
 
