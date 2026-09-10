@@ -10,6 +10,55 @@ function newId(): string {
   return crypto.randomUUID()
 }
 
+/** Shared by the profile query and every address mutation (createAddress/
+ * editAddress/deleteAddress/selectAddress all return the caller's full,
+ * fresh profile — same shape the app's own onCompleted handlers expect). */
+async function buildProfilePayload(ctx: GraphQLContext, userId: string) {
+  const user = await ctx.env.DB.prepare(
+    'SELECT id, email, phone, name, is_active FROM users WHERE id = ?'
+  )
+    .bind(userId)
+    .first<{ id: string; email: string | null; phone: string | null; name: string; is_active: number }>()
+  if (!user) throw new AuthError()
+
+  const { results: addressRows } = await ctx.env.DB.prepare(
+    'SELECT id, label, delivery_address, details, lat, lng, is_default FROM addresses WHERE user_id = ?'
+  )
+    .bind(user.id)
+    .all<{
+      id: string
+      label: string | null
+      delivery_address: string
+      details: string | null
+      lat: number | null
+      lng: number | null
+      is_default: number
+    }>()
+
+  return {
+    _id: user.id,
+    name: user.name,
+    phone: user.phone,
+    phoneIsVerified: !!user.phone,
+    email: user.email,
+    emailIsVerified: !!user.email,
+    notificationToken: null,
+    isActive: user.is_active !== 0,
+    isOrderNotification: true,
+    isOfferNotification: true,
+    favourite: [],
+    addresses: addressRows.map((a) => ({
+      _id: a.id,
+      label: a.label,
+      deliveryAddress: a.delivery_address,
+      details: a.details,
+      selected: a.is_default === 1,
+      location:
+        a.lat != null && a.lng != null ? { coordinates: [a.lng, a.lat] } : null
+    }))
+  }
+}
+
 interface UserRow {
   id: string
   name: string
@@ -204,6 +253,19 @@ export const schema = createSchema<GraphQLContext>({
       createZone(zone: ZoneInput!): Zone!
       editZone(zone: ZoneInput!): Zone!
       deleteZone(id: String!): Zone!
+      createAddress(addressInput: AddressInput!): Profile!
+      editAddress(addressInput: AddressInput!): Profile!
+      deleteAddress(id: ID!): Profile!
+      selectAddress(id: String!): Profile!
+    }
+
+    input AddressInput {
+      _id: String
+      label: String
+      deliveryAddress: String!
+      details: String
+      longitude: String!
+      latitude: String!
     }
 
     input ZoneInput {
@@ -551,49 +613,7 @@ export const schema = createSchema<GraphQLContext>({
       // already reads, plus the caller's real saved addresses.
       profile: async (_parent, _args, ctx) => {
         const authUser = requireUser(ctx)
-        const user = await ctx.env.DB.prepare(
-          'SELECT id, email, phone, name, is_active FROM users WHERE id = ?'
-        )
-          .bind(authUser.sub)
-          .first<{ id: string; email: string | null; phone: string | null; name: string; is_active: number }>()
-        if (!user) throw new AuthError()
-
-        const { results: addressRows } = await ctx.env.DB.prepare(
-          'SELECT id, label, delivery_address, details, lat, lng, is_default FROM addresses WHERE user_id = ?'
-        )
-          .bind(user.id)
-          .all<{
-            id: string
-            label: string | null
-            delivery_address: string
-            details: string | null
-            lat: number | null
-            lng: number | null
-            is_default: number
-          }>()
-
-        return {
-          _id: user.id,
-          name: user.name,
-          phone: user.phone,
-          phoneIsVerified: !!user.phone,
-          email: user.email,
-          emailIsVerified: !!user.email,
-          notificationToken: null,
-          isActive: user.is_active !== 0,
-          isOrderNotification: true,
-          isOfferNotification: true,
-          favourite: [],
-          addresses: addressRows.map((a) => ({
-            _id: a.id,
-            label: a.label,
-            deliveryAddress: a.delivery_address,
-            details: a.details,
-            selected: a.is_default === 1,
-            location:
-              a.lat != null && a.lng != null ? { coordinates: [a.lng, a.lat] } : null
-          }))
-        }
+        return buildProfilePayload(ctx, authUser.sub)
       },
 
       // Backs enatega-multivendor-app's own zones query (its LocationContext
@@ -687,6 +707,87 @@ export const schema = createSchema<GraphQLContext>({
           isActive: row.is_active !== 0,
           location: { coordinates: [JSON.parse(row.coordinates)] }
         }
+      },
+
+      // The app's own onCompleted handlers find the address they just
+      // created/edited by looking for `selected: true` in the returned
+      // list, so each of these makes its own address the default and
+      // clears the others — same "one selected delivery address" model
+      // selectAddress already implies.
+      createAddress: async (
+        _parent,
+        args: { addressInput: { label?: string; deliveryAddress: string; details?: string; longitude: string; latitude: string } },
+        ctx
+      ) => {
+        const authUser = requireUser(ctx)
+        const id = newId()
+        await ctx.env.DB.prepare(
+          'UPDATE addresses SET is_default = 0 WHERE user_id = ?'
+        )
+          .bind(authUser.sub)
+          .run()
+        await ctx.env.DB.prepare(
+          'INSERT INTO addresses (id, user_id, label, delivery_address, details, lat, lng, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, 1)'
+        )
+          .bind(
+            id,
+            authUser.sub,
+            args.addressInput.label ?? null,
+            args.addressInput.deliveryAddress,
+            args.addressInput.details ?? null,
+            Number(args.addressInput.latitude),
+            Number(args.addressInput.longitude)
+          )
+          .run()
+        return buildProfilePayload(ctx, authUser.sub)
+      },
+
+      editAddress: async (
+        _parent,
+        args: { addressInput: { _id: string; label?: string; deliveryAddress: string; details?: string; longitude: string; latitude: string } },
+        ctx
+      ) => {
+        const authUser = requireUser(ctx)
+        await ctx.env.DB.prepare(
+          'UPDATE addresses SET is_default = 0 WHERE user_id = ?'
+        )
+          .bind(authUser.sub)
+          .run()
+        await ctx.env.DB.prepare(
+          'UPDATE addresses SET label = ?, delivery_address = ?, details = ?, lat = ?, lng = ?, is_default = 1 WHERE id = ? AND user_id = ?'
+        )
+          .bind(
+            args.addressInput.label ?? null,
+            args.addressInput.deliveryAddress,
+            args.addressInput.details ?? null,
+            Number(args.addressInput.latitude),
+            Number(args.addressInput.longitude),
+            args.addressInput._id,
+            authUser.sub
+          )
+          .run()
+        return buildProfilePayload(ctx, authUser.sub)
+      },
+
+      deleteAddress: async (_parent, args: { id: string }, ctx) => {
+        const authUser = requireUser(ctx)
+        await ctx.env.DB.prepare('DELETE FROM addresses WHERE id = ? AND user_id = ?')
+          .bind(args.id, authUser.sub)
+          .run()
+        return buildProfilePayload(ctx, authUser.sub)
+      },
+
+      selectAddress: async (_parent, args: { id: string }, ctx) => {
+        const authUser = requireUser(ctx)
+        await ctx.env.DB.prepare('UPDATE addresses SET is_default = 0 WHERE user_id = ?')
+          .bind(authUser.sub)
+          .run()
+        await ctx.env.DB.prepare(
+          'UPDATE addresses SET is_default = 1 WHERE id = ? AND user_id = ?'
+        )
+          .bind(args.id, authUser.sub)
+          .run()
+        return buildProfilePayload(ctx, authUser.sub)
       },
 
       continueWithGoogle: async (_parent, args: { idToken: string }, ctx) => {
