@@ -153,7 +153,11 @@
 import React, { useRef, useState, useContext, useLayoutEffect, useMemo } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
-import PagerView from 'react-native-pager-view'
+// Routed through a local wrapper (not "react-native-pager-view" directly) so
+// Metro's platform resolution can swap in a web-safe shim — see
+// src/services/pager-view.web.js for why. Native behavior and this screen's
+// own logic are unchanged.
+import PagerView from '../../../services/pager-view'
 import { useQuery } from '@apollo/client'
 import { useNavigation, useRoute } from '@react-navigation/native'
 

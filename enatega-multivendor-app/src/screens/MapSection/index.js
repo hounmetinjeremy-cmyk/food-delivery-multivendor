@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState
 } from 'react'
-import MapView, { Marker } from 'react-native-maps'
+import MapView, { Marker } from '../../services/rn-maps'
 import styles from './styles'
 import { View, FlatList, TouchableOpacity, Platform, Image } from 'react-native'
 import { useNavigation } from '@react-navigation/native'

@@ -60,7 +60,9 @@ import navigationService from '../../routes/navigationService'
 import OrderHistory from '../screens/OrderHistory'
 import OrderHistoryDetails from '../screens/OrderHistory/OrderHistoryDetails'
 import FeedBack from '../screens/FeedBack'
-import { StripeProvider } from '@stripe/stripe-react-native'
+// Same reasoning, for the same reason: '@stripe/stripe-react-native' has no
+// web build at all — see src/services/stripe-native.web.js.
+import { StripeProvider } from '../../services/stripe-native'
 import ConfigurationContext from '../../context/Configuration'
 import SingleVendorPaymentCheckout from '../screens/Checkout/SingleVendorPaymentCheckout'
 import * as Notifications from 'expo-notifications'

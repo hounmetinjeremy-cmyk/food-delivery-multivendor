@@ -92,6 +92,26 @@ const normalizeEnvironment = (env) => {
   return 'development'
 }
 
+// ZeGo's own backend (zego-api), when configured, overrides the upstream
+// Enatega demo backend hardcoded in MULTI_ENV_CONFIG above — same override
+// pattern as getSingleVendorConfig() just above. Falls back to the fork's
+// original defaults when unset, so nothing changes for anyone still pointed
+// at the upstream demo backend.
+const getMultiVendorOverrides = () => {
+  const graphqlUrl = process.env.EXPO_PUBLIC_GRAPHQL_URL
+  const wsGraphqlUrl = process.env.EXPO_PUBLIC_WS_GRAPHQL_URL
+  const serverRestUrl = process.env.EXPO_PUBLIC_SERVER_REST_URL
+
+  if (!graphqlUrl || !wsGraphqlUrl || !serverRestUrl) return null
+
+  return {
+    GRAPHQL_URL: graphqlUrl,
+    WS_GRAPHQL_URL: wsGraphqlUrl,
+    SERVER_URL: graphqlUrl,
+    SERVER_REST_URL: serverRestUrl
+  }
+}
+
 const getEnvironmentConfig = (env, mode = APP_MODES.MULTI) => {
   const environment = normalizeEnvironment(env)
 
@@ -101,6 +121,7 @@ const getEnvironmentConfig = (env, mode = APP_MODES.MULTI) => {
 
   return {
     ...MULTI_ENV_CONFIG[environment],
+    ...getMultiVendorOverrides(),
     PUBLIC_ACCESS_REQUIRED: true,
     SINGLE_VENDOR_ENABLED: getSingleVendorConfig().SINGLE_VENDOR_ENABLED
   }

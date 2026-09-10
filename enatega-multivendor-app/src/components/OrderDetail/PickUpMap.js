@@ -1,6 +1,6 @@
 import React, { useEffect, useContext } from 'react'
 import { View, Dimensions, Image } from 'react-native'
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps'
+import MapView, { Marker, PROVIDER_DEFAULT } from '../../services/rn-maps'
 import { scale } from '../../utils/scaling'
 import ThemeContext from '../../ui/ThemeContext/ThemeContext'
 import { linkToMapsApp } from '../../utils/links'

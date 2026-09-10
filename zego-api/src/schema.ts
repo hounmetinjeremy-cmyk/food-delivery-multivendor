@@ -129,7 +129,9 @@ export const schema = createSchema<GraphQLContext>({
       ownerSession: OwnerLoginPayload!
       adminSsoToken: String!
       riderSsoToken: RiderSsoPayload!
+      customerSsoToken: CustomerSsoPayload!
       me: Me!
+      profile: Profile!
     }
 
     type Me {
@@ -143,6 +145,26 @@ export const schema = createSchema<GraphQLContext>({
     type RiderSsoPayload {
       userId: ID!
       token: String!
+    }
+
+    type CustomerSsoPayload {
+      userId: ID!
+      token: String!
+    }
+
+    type Profile {
+      _id: ID!
+      name: String!
+      phone: String
+      phoneIsVerified: Boolean!
+      email: String
+      emailIsVerified: Boolean!
+      notificationToken: String
+      isActive: Boolean!
+      isOrderNotification: Boolean!
+      isOfferNotification: Boolean!
+      addresses: [Address!]!
+      favourite: [String!]!
     }
 
     type Mutation {
@@ -275,8 +297,12 @@ export const schema = createSchema<GraphQLContext>({
     }
 
     type Address {
+      _id: ID
+      label: String
       location: Location
       deliveryAddress: String
+      details: String
+      selected: Boolean
     }
 
     type LoginProfile {
@@ -482,6 +508,65 @@ export const schema = createSchema<GraphQLContext>({
         const authUser = requireRole(ctx, 'rider')
         const token = await signJWT({ sub: authUser.sub, role: 'rider' }, ctx.env.JWT_SECRET)
         return { userId: authUser.sub, token }
+      },
+
+      // Same idea as riderSsoToken: the embedded enatega-multivendor-app web
+      // build stores this token itself and reuses it directly, no separate
+      // verify-and-reissue step.
+      customerSsoToken: async (_parent, _args, ctx) => {
+        const authUser = requireRole(ctx, 'customer')
+        const token = await signJWT({ sub: authUser.sub, role: 'customer' }, ctx.env.JWT_SECRET)
+        return { userId: authUser.sub, token }
+      },
+
+      // Backs enatega-multivendor-app's own `profile` query (its UserContext
+      // fires this as soon as a token is present) — same user row `login`
+      // already reads, plus the caller's real saved addresses.
+      profile: async (_parent, _args, ctx) => {
+        const authUser = requireUser(ctx)
+        const user = await ctx.env.DB.prepare(
+          'SELECT id, email, phone, name, is_active FROM users WHERE id = ?'
+        )
+          .bind(authUser.sub)
+          .first<{ id: string; email: string | null; phone: string | null; name: string; is_active: number }>()
+        if (!user) throw new AuthError()
+
+        const { results: addressRows } = await ctx.env.DB.prepare(
+          'SELECT id, label, delivery_address, details, lat, lng, is_default FROM addresses WHERE user_id = ?'
+        )
+          .bind(user.id)
+          .all<{
+            id: string
+            label: string | null
+            delivery_address: string
+            details: string | null
+            lat: number | null
+            lng: number | null
+            is_default: number
+          }>()
+
+        return {
+          _id: user.id,
+          name: user.name,
+          phone: user.phone,
+          phoneIsVerified: !!user.phone,
+          email: user.email,
+          emailIsVerified: !!user.email,
+          notificationToken: null,
+          isActive: user.is_active !== 0,
+          isOrderNotification: true,
+          isOfferNotification: true,
+          favourite: [],
+          addresses: addressRows.map((a) => ({
+            _id: a.id,
+            label: a.label,
+            deliveryAddress: a.delivery_address,
+            details: a.details,
+            selected: a.is_default === 1,
+            location:
+              a.lat != null && a.lng != null ? { coordinates: [a.lng, a.lat] } : null
+          }))
+        }
       }
     },
 

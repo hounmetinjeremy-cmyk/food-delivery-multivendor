@@ -62,7 +62,7 @@ import Account from '../screens/Account/Account'
 import EditName from '../components/Account/EditName/EditName'
 import UserContext from '../context/User'
 import ConfigurationContext from '../context/Configuration'
-import { ActivityIndicator, Easing, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Easing, Platform, StyleSheet, View } from 'react-native'
 import { SLIDE_RIGHT_WITH_CURVE_ANIM, SLIDE_UP_RIGHT_ANIMATION, AIMATE_FROM_CENTER, SLIDE_UP_RIGHT_ANIMATION_FIXED_HEADER } from '../utils/constants'
 import ModeProfileTab from '../components/VendorModeToggle/ModeProfileTab'
 import useMultivendorTheme from '../ui/designSystem/useMultivendorTheme'
@@ -281,13 +281,19 @@ function BottomTabNavigator() {
           // synced with BottomTabIcon, make sure to have the same name as icon in BottomTabIcon
           return <BottomTabIcon name={route.name.toLowerCase()} size={size} color={color} />
         },
-        tabBarStyle: {
-          backgroundColor: currentTheme.cardBackground,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: tokens.colors.borderSubtle,
-          elevation: 0,
-          shadowOpacity: 0
-        },
+        // On web this app only ever runs embedded inside the ZeGo shell's own
+        // "Accueil" tab, which already provides the outer 5-tab bar — showing
+        // this app's own tab bar too would stack two bottom bars on screen.
+        // Native behavior (a real standalone run of this app) is unchanged.
+        tabBarStyle: Platform.OS === 'web'
+          ? { display: 'none' }
+          : {
+              backgroundColor: currentTheme.cardBackground,
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: tokens.colors.borderSubtle,
+              elevation: 0,
+              shadowOpacity: 0
+            },
         tabBarItemStyle: {
           flex: 1
         },

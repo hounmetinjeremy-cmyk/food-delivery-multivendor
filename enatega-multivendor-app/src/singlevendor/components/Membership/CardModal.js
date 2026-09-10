@@ -1,7 +1,11 @@
 import React from 'react'
 import { Modal, View, Text, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { CardField } from '@stripe/stripe-react-native'
+// Routed through a local wrapper (not "@stripe/stripe-react-native" directly)
+// so Metro's platform resolution can swap in a web-safe stub — see
+// src/services/stripe-native.web.js for why. Native behavior and this
+// screen's own logic are unchanged.
+import { CardField } from '../../../services/stripe-native'
 import { scale } from '../../../utils/scaling'
 
 function CardModal({ visible, setVisible, onClose, onPay, currentTheme }) {

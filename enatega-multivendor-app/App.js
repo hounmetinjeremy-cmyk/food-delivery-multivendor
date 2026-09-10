@@ -15,6 +15,7 @@ import useEnvVars from './environment'
 import setupApolloClient from './src/apollo/index'
 import { MessageComponent } from './src/components/FlashMessage/MessageComponent'
 import ReviewModal from './src/components/Review'
+import SsoBootstrap from './src/components/SsoBootstrap/SsoBootstrap'
 import { AuthProvider } from './src/context/Auth'
 import { ConfigurationProvider } from './src/context/Configuration'
 import { LocationProvider } from './src/context/Location'
@@ -353,6 +354,7 @@ function ModeAwareApp() {
             >
               <StatusBar backgroundColor={Theme[theme].menuBar} barStyle={theme === 'Dark' ? 'light-content' : 'dark-content'} />
               <AuthProvider key={`auth-${mode}`}>
+                <SsoBootstrap />
                 <ConfigurationProvider key={`configuration-${mode}`}>
                   <LocationProvider>
                     <SentryInit />

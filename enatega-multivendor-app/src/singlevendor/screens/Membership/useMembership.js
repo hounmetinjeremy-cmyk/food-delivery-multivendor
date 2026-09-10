@@ -2,7 +2,9 @@ import { Alert } from 'react-native'
 import { useContext, useState } from 'react'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_ALL_SUBSCRIPTION_PLANS } from '../../apollo/queries'
-import { useStripe } from '@stripe/stripe-react-native'
+// Same reasoning, for the same reason: '@stripe/stripe-react-native' has no
+// web build at all — see src/services/stripe-native.web.js.
+import { useStripe } from '../../../services/stripe-native'
 import { CREATE_SUBSCRIPTION, CANCEL_SUBSCRIPTION, UPDATE_SUBSCRIPTION } from '../../apollo/mutations'
 import { FlashMessage } from '../../../ui/FlashMessage/FlashMessage'
 import UserContext from '../../../context/User'

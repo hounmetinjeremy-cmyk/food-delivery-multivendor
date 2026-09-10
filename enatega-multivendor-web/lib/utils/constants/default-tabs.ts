@@ -17,6 +17,10 @@ export const useProfileDefaultTabs = (): ITabItem[] => {
     { label: t("profileDefaultTabs.tab4"), path: "/profile/settings" },
     { label: t("profileDefaultTabs.tab5"), path: "/profile/getHelp" },
     { label: t("profileDefaultTabs.tab6"), path: "/profile/customerTicket" },
+    // The original fork's own customer app (enatega-multivendor-app), reused
+    // as-is and embedded here — a separate, optional space, not a
+    // replacement for the live Accueil tab's own discovery/checkout flow.
+    { label: "Nouvelle interface (bêta)", path: "/profile/client-app" },
     // One click each: register (or open the dashboard if already registered)
     // — no marketing page and no leaving the app. "#become-rider" and
     // "#vendor-dashboard" are sentinel paths handled by ProfileTabs, which
