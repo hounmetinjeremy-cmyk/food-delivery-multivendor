@@ -6,7 +6,7 @@
     {
       "binding": "DB",
       "database_name": "enatega-multivendor-db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "18cc0b8a-addd-429c-bd0c-f6fc21480ff2"
     }
   ],
   "vars": {
