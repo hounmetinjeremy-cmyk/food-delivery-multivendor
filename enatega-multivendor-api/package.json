@@ -8,10 +8,6 @@
     "db:migrate:local": "wrangler d1 execute enatega-multivendor-db --local --file=migrations/0001_init.sql",
     "db:migrate:remote": "wrangler d1 execute enatega-multivendor-db --remote --file=migrations/0001_init.sql"
   },
-  "dependencies": {
-    "graphql": "^16.9.0",
-    "graphql-yoga": "^5.7.0"
-  },
   "devDependencies": {
     "wrangler": "^3.78.0"
   }
