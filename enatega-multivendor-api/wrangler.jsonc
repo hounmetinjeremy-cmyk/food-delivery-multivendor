@@ -1,0 +1,15 @@
+{
+  "name": "enatega-multivendor-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "enatega-multivendor-db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "vars": {
+    "JWT_SECRET": "REPLACE_ME_WITH_WRANGLER_SECRET"
+  }
+}
