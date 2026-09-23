@@ -21,6 +21,22 @@ function requireAuth(context) {
   return context.user;
 }
 
+// Notifie le Durable Object temps réel qu'une commande a changé.
+// Best-effort : ne doit jamais faire échouer la mutation appelante.
+async function notifyOrderUpdate(context, order) {
+  try {
+    if (!context.env.REALTIME) return;
+    const id = context.env.REALTIME.idFromName('global');
+    const stub = context.env.REALTIME.get(id);
+    await stub.fetch('https://internal/notify', {
+      method: 'POST',
+      body: JSON.stringify({ orderId: order.id, order }),
+    });
+  } catch (err) {
+    // Le suivi temps réel est une amélioration, pas une dépendance critique.
+  }
+}
+
 export const resolvers = {
   Query: {
     me: (_parent, _args, context) => context.user || null,
@@ -225,7 +241,7 @@ export const resolvers = {
 
       await context.env.DB.prepare('UPDATE orders SET status = ? WHERE id = ?').bind(status, id).run();
       const row = await context.env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
-      return {
+      const order = {
         id: row.id,
         status: row.status,
         orderAmount: row.order_amount,
@@ -235,6 +251,10 @@ export const resolvers = {
         restaurant: { id: row.restaurant_id },
         items: [],
       };
+
+      await notifyOrderUpdate(context, order);
+
+      return order;
     },
   },
 };
