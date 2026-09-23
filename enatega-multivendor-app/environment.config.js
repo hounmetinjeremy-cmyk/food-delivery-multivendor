@@ -3,50 +3,33 @@ const APP_MODES = {
   SINGLE: 'SINGLE'
 }
 
+// Backend auto-heberge (Cloudflare Worker + Daytona/D1), remplace le backend
+// officiel Enatega (proprietaire/payant : aws-server-v2.enatega.com).
+// Pas de WebSocket/REST implementes cote serveur pour l'instant : les
+// abonnements temps reel (suivi livraison en direct) et les endpoints REST
+// ne fonctionneront pas tant qu'ils ne sont pas ajoutes au Worker.
+const SELF_HOSTED_HOST = 'food-delivery-multivendor.hounmetinjeremy.workers.dev'
+
 const MULTI_ENV_CONFIG = {
   development: {
-    GRAPHQL_URL: 'https://aws-server-v2.enatega.com/graphql',
-    WS_GRAPHQL_URL: 'wss://aws-server-v2.enatega.com/graphql',
-    SERVER_URL: 'https://aws-server-v2.enatega.com/graphql',
-    SERVER_REST_URL: 'https://aws-server-v2.enatega.com/',
-    // GRAPHQL_URL: 'https://backup-server.enatega.com/graphql',
-    // WS_GRAPHQL_URL: 'wss://backup-server.enatega.com/graphql',
-    // SERVER_URL: 'https://backup-server.enatega.com/graphql',
-    // SERVER_REST_URL: 'https://backup-server.enatega.com/',
-    // GRAPHQL_URL: 'http://192.168.1.175:8001/graphql',
-    // WS_GRAPHQL_URL: 'wss://192.168.1.175:8001/graphql',
-    // SERVER_URL: 'http://192.168.1.175:8001/graphql',
-    // SERVER_REST_URL: 'http://192.168.1.175:8001/',
+    GRAPHQL_URL: `https://${SELF_HOSTED_HOST}/graphql`,
+    WS_GRAPHQL_URL: `wss://${SELF_HOSTED_HOST}/graphql`,
+    SERVER_URL: `https://${SELF_HOSTED_HOST}/graphql`,
+    SERVER_REST_URL: `https://${SELF_HOSTED_HOST}/`,
     CLARITY_ENABLED: true
   },
   staging: {
-    GRAPHQL_URL: 'https://aws-server-v2.enatega.com/graphql',
-    WS_GRAPHQL_URL: 'wss://aws-server-v2.enatega.com/graphql',
-    SERVER_URL: 'https://aws-server-v2.enatega.com/graphql',
-    SERVER_REST_URL: 'https://aws-server-v2.enatega.com/',
-    // GRAPHQL_URL: 'https://backup-server.enatega.com/graphql',
-    // WS_GRAPHQL_URL: 'wss://backup-server.enatega.com/graphql',
-    // SERVER_URL: 'https://backup-server.enatega.com/graphql',
-    // SERVER_REST_URL: 'https://backup-server.enatega.com/',
-    // GRAPHQL_URL: 'http://192.168.1.175:8001/graphql',
-    // WS_GRAPHQL_URL: 'wss://192.168.1.175:8001/graphql',
-    // SERVER_URL: 'http://192.168.1.175:8001/graphql',
-    // SERVER_REST_URL: 'http://192.168.1.175:8001/',
+    GRAPHQL_URL: `https://${SELF_HOSTED_HOST}/graphql`,
+    WS_GRAPHQL_URL: `wss://${SELF_HOSTED_HOST}/graphql`,
+    SERVER_URL: `https://${SELF_HOSTED_HOST}/graphql`,
+    SERVER_REST_URL: `https://${SELF_HOSTED_HOST}/`,
     CLARITY_ENABLED: true
   },
   production: {
-    GRAPHQL_URL: 'https://aws-server-v2.enatega.com/graphql',
-    WS_GRAPHQL_URL: 'wss://aws-server-v2.enatega.com/graphql',
-    SERVER_URL: 'https://aws-server-v2.enatega.com/graphql',
-    SERVER_REST_URL: 'https://aws-server-v2.enatega.com/',
-    // GRAPHQL_URL: 'https://backup-server.enatega.com/graphql',
-    // WS_GRAPHQL_URL: 'wss://backup-server.enatega.com/graphql',
-    // SERVER_URL: 'https://backup-server.enatega.com/graphql',
-    // SERVER_REST_URL: 'https://backup-server.enatega.com/',
-    // GRAPHQL_URL: 'http://192.168.1.175:8001/graphql',
-    // WS_GRAPHQL_URL: 'wss://192.168.1.175:8001/graphql',
-    // SERVER_URL: 'http://192.168.1.175:8001/graphql',
-    // SERVER_REST_URL: 'http://192.168.1.175:8001/',
+    GRAPHQL_URL: `https://${SELF_HOSTED_HOST}/graphql`,
+    WS_GRAPHQL_URL: `wss://${SELF_HOSTED_HOST}/graphql`,
+    SERVER_URL: `https://${SELF_HOSTED_HOST}/graphql`,
+    SERVER_REST_URL: `https://${SELF_HOSTED_HOST}/`,
     CLARITY_ENABLED: true
   }
 }
