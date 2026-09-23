@@ -18,7 +18,10 @@
     "cy:run": "cypress run",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:single-vendor-schema": "node scripts/check-single-vendor-schema.js"
+    "check:single-vendor-schema": "node scripts/check-single-vendor-schema.js",
+    "pages:build": "npx @cloudflare/next-on-pages@latest",
+    "pages:deploy": "wrangler pages deploy",
+    "deploy": "npm run pages:build && npm run pages:deploy"
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",
@@ -61,6 +64,7 @@
   },
   "devDependencies": {
     "@babel/parser": "^7.28.0",
+    "@cloudflare/next-on-pages": "^1.13.5",
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@eslint/eslintrc": "^3.3.1",
@@ -97,14 +101,11 @@
     "tslib": "^2.6.3",
     "typescript": "^5.6.2",
     "vitest": "^3.2.4",
-    "webpack-bundle-analyzer": "^4.10.2"
+    "webpack-bundle-analyzer": "^4.10.2",
+    "wrangler": "^3.109.0"
   },
   "overrides": {
     "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "react-chat-elements": {
-      "react": "^19.2.0",
-      "react-dom": "^19.2.0"
-    }
+    "@types/react-dom": "^19"
   }
 }
