@@ -14,5 +14,13 @@
       "binding": "STORAGE",
       "bucket_name": "center-storage"
     }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "REALTIME", "class_name": "RealtimeHub" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_classes": ["RealtimeHub"] }
   ]
 }
