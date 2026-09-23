@@ -109,4 +109,10 @@ export const typeDefs = /* GraphQL */ `
     placeOrder(input: OrderInput!): Order!
     updateOrderStatus(id: ID!, status: String!): Order!
   }
+
+  # Diffusée en temps réel via WebSocket (GET /graphql avec Upgrade: websocket),
+  # sur le protocole graphql-ws. Déclenchée par updateOrderStatus.
+  type Subscription {
+    orderStatusChanged(orderId: ID!): Order!
+  }
 `;
