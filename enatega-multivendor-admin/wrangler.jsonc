@@ -1,0 +1,6 @@
+{
+  "name": "food-delivery-multivendor-admin",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "build_command": "npm run pages:build",
+  "build_output_directory": "../. projects/
