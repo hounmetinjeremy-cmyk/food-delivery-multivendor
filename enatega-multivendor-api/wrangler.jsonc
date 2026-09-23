@@ -8,5 +8,11 @@
       "database_name": "enatega-multivendor-db",
       "database_id": "18cc0b8a-addd-429c-bd0c-f6fc21480ff2"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "STORAGE",
+      "bucket_name": "center-storage"
+    }
   ]
 }
