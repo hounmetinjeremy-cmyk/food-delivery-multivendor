@@ -3,12 +3,22 @@ import { resolvers } from './resolvers.js';
 import { verifyJWT } from './auth.js';
 import { typeDefs } from './schema.js';
 
+export { RealtimeHub } from './durable-object.js';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
+    if (
+      request.method === 'GET' &&
+      url.pathname === '/graphql' &&
+      request.headers.get('Upgrade') === 'websocket'
+    ) {
+      return handleRealtime(request, env);
     }
 
     if (request.method === 'POST' && url.pathname === '/graphql') {
@@ -26,6 +36,15 @@ export default {
     return jsonResponse({ error: 'Not Found' }, 404);
   },
 };
+
+function handleRealtime(request, env) {
+  if (!env.REALTIME) {
+    return new Response('Temps réel non configuré', { status: 500 });
+  }
+  const id = env.REALTIME.idFromName('global');
+  const stub = env.REALTIME.get(id);
+  return stub.fetch(request);
+}
 
 async function getAuthUser(request, env) {
   const authHeader = request.headers.get('authorization') || '';
