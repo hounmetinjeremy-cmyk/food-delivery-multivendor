@@ -111,6 +111,7 @@ const userSchema = new Schema({
   notificationToken: String,
   favourite: [{ type: Schema.Types.ObjectId, ref: 'Restaurant' }],
   userType: { type: String, default: 'CUSTOMER' },
+  walletBalance: { type: Number, default: 0 },
   appleId: String,
   otp: String,
   otpExpiresAt: Date,
