@@ -40,6 +40,7 @@ const typeDefs = /* GraphQL */ `
     notificationToken: String
     favourite: [ID]
     userType: String
+    walletBalance: Float
   }
 
   type Rider {
