@@ -14,7 +14,9 @@ import {
   StatusBar,
   FlatList,
   ScrollView,
-  SafeAreaView
+  SafeAreaView,
+  Linking,
+  Alert
 } from 'react-native'
 
 import gql from 'graphql-tag'
@@ -68,6 +70,35 @@ function Profile(props) {
     const orderStatusActive = ['PENDING', 'PICKED', 'ACCEPTED', 'ASSIGNED']
     return orders.filter((o) => orderStatusActive.includes(o.orderStatus))
   }, [orders])
+
+  // Bascule vers l'app Vendeur ou Livreur (même compte : même email/mot de passe).
+  // Ouvre l'app via son schéma d'URL si elle est installée, sinon propose de l'installer.
+  const openPartnerApp = useCallback(
+    (target) => {
+      const scheme = target === 'store' ? 'enatega-store://' : 'com.enatega.multirider://'
+      const label = target === 'store' ? (t('VendorSpace') || 'Espace Vendeur') : (t('RiderSpace') || 'Espace Livreur')
+      Linking.canOpenURL(scheme)
+        .then((supported) => {
+          if (supported) {
+            Linking.openURL(scheme)
+          } else {
+            Alert.alert(
+              label,
+              t('PartnerAppNotInstalled') ||
+                "Cette application n'est pas installée sur cet appareil. Installez-la puis connectez-vous avec le même email et mot de passe."
+            )
+          }
+        })
+        .catch(() => {
+          Alert.alert(
+            label,
+            t('PartnerAppNotInstalled') ||
+              "Cette application n'est pas installée sur cet appareil. Installez-la puis connectez-vous avec le même email et mot de passe."
+          )
+        })
+    },
+    [t]
+  )
 
   const { data, loading, refetch } = useQuery(RESTAURANTS, {
     variables: {
@@ -298,6 +329,26 @@ function Profile(props) {
                   </View>
                     )
                   )}
+
+              <View style={styles().quickLinkView}>
+                <SectionHeader title={t('ProSpace') || 'Espace pro'} />
+
+                <ButtonContainer
+                  icon={'storefront-outline'}
+                  iconType={'Ionicons'}
+                  onPress={() => openPartnerApp('store')}
+                  title={t('VendorSpace') || 'Espace Vendeur'}
+                  currentTheme={currentTheme}
+                />
+                <Divider insetStart={tokens.spacing.lg} insetEnd={tokens.spacing.lg} />
+                <ButtonContainer
+                  icon={'bicycle-outline'}
+                  iconType={'Ionicons'}
+                  onPress={() => openPartnerApp('rider')}
+                  title={t('RiderSpace') || 'Espace Livreur'}
+                  currentTheme={currentTheme}
+                />
+              </View>
 
               <View style={styles().settingView}>
                 <SectionHeader title={t('titleSettings')} />
