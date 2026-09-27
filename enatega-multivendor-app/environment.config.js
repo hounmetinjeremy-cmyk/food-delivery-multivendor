@@ -3,12 +3,11 @@ const APP_MODES = {
   SINGLE: 'SINGLE'
 }
 
-// Backend auto-heberge (Cloudflare Worker + Daytona/D1), remplace le backend
-// officiel Enatega (proprietaire/payant : aws-server-v2.enatega.com).
-// Pas de WebSocket/REST implementes cote serveur pour l'instant : les
-// abonnements temps reel (suivi livraison en direct) et les endpoints REST
-// ne fonctionneront pas tant qu'ils ne sont pas ajoutes au Worker.
-const SELF_HOSTED_HOST = 'food-delivery-multivendor.hounmetinjeremy.workers.dev'
+// Backend auto-heberge (Node.js/GraphQL + MongoDB Atlas, sur Render), remplace le
+// backend officiel Enatega (proprietaire/payant : aws-server-v2.enatega.com).
+// Reproduit le schema GraphQL complet attendu par l'app (restaurants, commandes,
+// suivi temps reel via graphql-ws, etc.).
+const SELF_HOSTED_HOST = 'enatega-server.onrender.com'
 
 const MULTI_ENV_CONFIG = {
   development: {
