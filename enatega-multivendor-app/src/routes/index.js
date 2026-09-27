@@ -66,6 +66,7 @@ import { ActivityIndicator, Easing, StyleSheet, View } from 'react-native'
 import { SLIDE_RIGHT_WITH_CURVE_ANIM, SLIDE_UP_RIGHT_ANIMATION, AIMATE_FROM_CENTER, SLIDE_UP_RIGHT_ANIMATION_FIXED_HEADER } from '../utils/constants'
 import ModeProfileTab from '../components/VendorModeToggle/ModeProfileTab'
 import useMultivendorTheme from '../ui/designSystem/useMultivendorTheme'
+import Wallet from '../screens/Wallet/Wallet'
 
 const NavigationStack = createStackNavigator()
 const Location = createStackNavigator()
@@ -311,55 +312,19 @@ function BottomTabNavigator() {
         })}
       />
       <Tab.Screen
-        name='Restaurants'
-        component={Menu}
+        name='MyOrders'
+        component={MyOrders}
         options={{
-          tabBarLabel: t('Restaurants')
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: () => {
-            navigation.navigate('Restaurants', {
-              selectedType: 'restaurant',
-              queryType: 'restaurant',
-              collection: null,
-              isShopType: false,
-              menuTitle: null
-            })
-          }
-        })}
-        initialParams={{
-          selectedType: 'restaurant',
-          queryType: 'restaurant'
+          tabBarLabel: t('Orders'),
+          headerShown: false
         }}
       />
       <Tab.Screen
-        name='Store'
-        component={Menu}
+        name='Wallet'
+        component={Wallet}
         options={{
-          tabBarLabel: t('Store')
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: () => {
-            navigation.navigate('Store', {
-              selectedType: 'grocery',
-              queryType: 'grocery',
-              shopType: 'grocery',
-              collection: null,
-              isShopType: false,
-              menuTitle: null
-            })
-          }
-        })}
-        initialParams={{
-          selectedType: 'grocery',
-          queryType: 'grocery'
-        }}
-      />
-      <Tab.Screen
-        name='Search'
-        getComponent={() => require('../screens/Search/SearchScreen').default}
-        options={{
-          tabBarLabel: t('search')
+          tabBarLabel: t('Wallet'),
+          headerShown: false
         }}
       />
       <Tab.Screen
