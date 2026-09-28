@@ -9,10 +9,10 @@ import {
 
 const MULTI_GRAPHQL_URL =
   process.env.EXPO_PUBLIC_GRAPHQL_URL ??
-  "https://food-delivery-multivendor.hounmetinjeremy.workers.dev/graphql";
+  "https://enatega-server.onrender.com/graphql";
 const MULTI_WS_GRAPHQL_URL =
   process.env.EXPO_PUBLIC_WS_GRAPHQL_URL ??
-  "wss://food-delivery-multivendor.hounmetinjeremy.workers.dev/graphql";
+  "wss://enatega-server.onrender.com/graphql";
 const SINGLE_GRAPHQL_URL =
   process.env.EXPO_PUBLIC_SINGLE_VENDOR_GRAPHQL_URL;
 const SINGLE_WS_GRAPHQL_URL =
