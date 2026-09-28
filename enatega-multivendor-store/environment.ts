@@ -7,8 +7,8 @@ export interface StoreEnvironment {
 }
 
 const MULTI_VENDOR_ENVIRONMENT: StoreEnvironment = {
-  GRAPHQL_URL: "https://food-delivery-multivendor.hounmetinjeremy.workers.dev/graphql",
-  WS_GRAPHQL_URL: "wss://food-delivery-multivendor.hounmetinjeremy.workers.dev/graphql",
+  GRAPHQL_URL: "https://enatega-server.onrender.com/graphql",
+  WS_GRAPHQL_URL: "wss://enatega-server.onrender.com/graphql",
   PUBLIC_ACCESS_REQUIRED: true,
 };
 
