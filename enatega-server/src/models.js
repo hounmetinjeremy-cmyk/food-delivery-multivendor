@@ -61,9 +61,18 @@ const RestaurantOptionSchema = new Schema(
   { _id: true }
 );
 
+const bussinessDetailsSchema = new Schema(
+  { bankName: String, accountNumber: String, accountName: String, accountCode: String },
+  { _id: false }
+);
+
 const restaurantSchema = new Schema({
   orderId: { type: Number, default: 0 },
   orderPrefix: { type: String, default: 'ORD' },
+  username: { type: String, index: true },
+  passwordHash: String,
+  commissionRate: { type: Number, default: 0 },
+  bussinessDetails: bussinessDetailsSchema,
   name: String,
   image: String,
   logo: String,
@@ -73,7 +82,6 @@ const restaurantSchema = new Schema({
   options: [RestaurantOptionSchema],
   addons: [AddonSchema],
   zone: { type: Schema.Types.ObjectId, ref: 'Zone' },
-  username: String,
   deliveryTime: { type: Number, default: 30 },
   minimumOrder: { type: Number, default: 0 },
   sections: [String],
@@ -248,7 +256,16 @@ const orderChatMessageSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
+const withdrawRequestSchema = new Schema({
+  target: { type: String, enum: ['restaurant', 'rider'], required: true },
+  restaurant: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
+  rider: { type: Schema.Types.ObjectId, ref: 'Rider' },
+  requestAmount: Number,
+  status: { type: String, default: 'PENDING' },
+}, { timestamps: true });
+
 module.exports = {
+  WithdrawRequest: mongoose.model('WithdrawRequest', withdrawRequestSchema),
   OrderChatMessage: mongoose.model('OrderChatMessage', orderChatMessageSchema),
   User: mongoose.model('User', userSchema),
   Restaurant: mongoose.model('Restaurant', restaurantSchema),
