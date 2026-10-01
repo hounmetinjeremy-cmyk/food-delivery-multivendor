@@ -8,6 +8,14 @@ function signToken(userId) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY_SECONDS });
 }
 
+function signRestaurantToken(restaurantId) {
+  return jwt.sign({ restaurantId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY_SECONDS });
+}
+
+function signRiderToken(riderId) {
+  return jwt.sign({ riderId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY_SECONDS });
+}
+
 function verifyToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET);
@@ -25,21 +33,28 @@ async function comparePassword(password, hash) {
   return bcrypt.compare(password, hash);
 }
 
-function getUserIdFromRequest(request) {
+function getAuthPayloadFromRequest(request) {
   const authHeader = request.headers.get
     ? request.headers.get('authorization')
     : request.headers.authorization;
-  if (!authHeader) return null;
+  if (!authHeader) return {};
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   const payload = verifyToken(token);
-  return payload ? payload.userId : null;
+  if (!payload) return {};
+  return {
+    userId: payload.userId || null,
+    restaurantId: payload.restaurantId || null,
+    riderId: payload.riderId || null,
+  };
 }
 
 module.exports = {
   TOKEN_EXPIRY_SECONDS,
   signToken,
+  signRestaurantToken,
+  signRiderToken,
   verifyToken,
   hashPassword,
   comparePassword,
-  getUserIdFromRequest,
+  getAuthPayloadFromRequest,
 };
