@@ -9,8 +9,9 @@ const {
   SupportTicket,
   TicketMessage,
   OrderChatMessage,
+  WithdrawRequest,
 } = require('./models');
-const { signToken, hashPassword, comparePassword } = require('./auth');
+const { signToken, signRestaurantToken, signRiderToken, hashPassword, comparePassword } = require('./auth');
 const { pubsub, EVENTS } = require('./pubsub');
 
 const DEV_OTP = '123456'; // Code de test fixe : aucun SMS/email n'est réellement envoyé (voir README).
@@ -18,6 +19,16 @@ const DEV_OTP = '123456'; // Code de test fixe : aucun SMS/email n'est réelleme
 function requireAuth(context) {
   if (!context.userId) throw new Error('Non authentifié');
   return context.userId;
+}
+
+function requireVendorAuth(context) {
+  if (!context.restaurantId) throw new Error('Non authentifié (vendeur)');
+  return context.restaurantId;
+}
+
+function requireRiderAuth(context) {
+  if (!context.riderId) throw new Error('Non authentifié (livreur)');
+  return context.riderId;
 }
 
 function iso(date) {
@@ -81,7 +92,13 @@ function findAddonsOnRestaurant(restaurantDoc, addonInputs) {
     .filter(Boolean);
 }
 
+const idAlias = { id: (parent) => parent._id ?? parent.id };
+
 const resolvers = {
+  Food: idAlias,
+  Variation: idAlias,
+  Addon: idAlias,
+
   JSON: {
     // Scalaire JSON minimal : accepte n'importe quelle valeur JS sérialisable.
     __serialize: (value) => value,
@@ -269,6 +286,58 @@ const resolvers = {
     fetchAllShopTypes: async () => ({
       data: [{ _id: 'restaurant', image: '', name: 'Restaurant', slug: 'restaurant' }],
     }),
+
+    restaurantOrders: async (_p, { offset, limit }, context) => {
+      const restaurantId = requireVendorAuth(context);
+      const docs = await Order.find({ restaurant: restaurantId })
+        .populate('restaurant').populate('user').populate('rider').populate('review')
+        .sort({ createdAt: -1 })
+        .skip(offset || 0)
+        .limit(limit || 50);
+      return Promise.all(docs.map(toOrder));
+    },
+
+    riderOrders: async (_p, { offset, limit }, context) => {
+      const riderId = requireRiderAuth(context);
+      const docs = await Order.find({ rider: riderId })
+        .populate('restaurant').populate('user').populate('rider').populate('review')
+        .sort({ createdAt: -1 })
+        .skip(offset || 0)
+        .limit(limit || 50);
+      return Promise.all(docs.map(toOrder));
+    },
+
+    earnings: async (_p, _a, context) => {
+      const restaurantId = requireVendorAuth(context);
+      const orders = await Order.find({ restaurant: restaurantId, orderStatus: 'DELIVERED' });
+      const total = orders.reduce((sum, o) => sum + (o.orderAmount || 0), 0);
+      return { data: { grandTotalEarnings: { storeTotal: total }, earnings: { storeEarnings: { totalEarnings: total } } } };
+    },
+
+    riderEarnings: async (_p, _a, context) => {
+      const riderId = requireRiderAuth(context);
+      const orders = await Order.find({ rider: riderId, orderStatus: 'DELIVERED' });
+      const total = orders.reduce((sum, o) => sum + (o.deliveryCharges || 0), 0);
+      return { data: { grandTotalEarnings: { storeTotal: total }, earnings: { storeEarnings: { totalEarnings: total } } } };
+    },
+
+    transactionHistory: async (_p, _a, context) => {
+      const restaurantId = requireVendorAuth(context);
+      const requests = await WithdrawRequest.find({ restaurant: restaurantId, status: 'COMPLETED' }).sort({ createdAt: -1 });
+      return { data: requests.map((r) => ({ status: r.status, amountTransferred: r.requestAmount, createdAt: iso(r.createdAt) })) };
+    },
+
+    storeCurrentWithdrawRequest: async (_p, { storeId }, context) => {
+      const restaurantId = storeId || requireVendorAuth(context);
+      const req = await WithdrawRequest.findOne({ restaurant: restaurantId, status: 'PENDING' }).sort({ createdAt: -1 });
+      return req ? { _id: req._id, requestAmount: req.requestAmount, status: req.status, createdAt: iso(req.createdAt) } : null;
+    },
+
+    riderCurrentWithdrawRequest: async (_p, { riderId }, context) => {
+      const id = riderId || requireRiderAuth(context);
+      const req = await WithdrawRequest.findOne({ rider: id, status: 'PENDING' }).sort({ createdAt: -1 });
+      return req ? { _id: req._id, requestAmount: req.requestAmount, status: req.status, createdAt: iso(req.createdAt) } : null;
+    },
   },
 
   Mutation: {
@@ -586,6 +655,201 @@ const resolvers = {
       user.otp = null;
       await user.save();
       return { result: 'ok' };
+    },
+
+    // ---- Vendeur (Store app) ----
+    restaurantLogin: async (_p, { username, password, notificationToken }) => {
+      const restaurant = await Restaurant.findOne({ username });
+      if (!restaurant) throw new Error('Identifiants invalides');
+      const valid = await comparePassword(password, restaurant.passwordHash);
+      if (!valid) throw new Error('Identifiants invalides');
+      if (notificationToken) {
+        restaurant.notificationToken = notificationToken;
+        await restaurant.save();
+      }
+      return { token: signRestaurantToken(restaurant._id), restaurantId: restaurant._id };
+    },
+
+    toggleStoreAvailability: async (_p, { restaurantId }, context) => {
+      requireVendorAuth(context);
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (!restaurant) throw new Error('Restaurant introuvable');
+      restaurant.isAvailable = !restaurant.isAvailable;
+      await restaurant.save();
+      return restaurant;
+    },
+
+    updateRestaurantBussinessDetails: async (_p, { id, bussinessDetails }, context) => {
+      requireVendorAuth(context);
+      const restaurant = await Restaurant.findByIdAndUpdate(id, { bussinessDetails }, { new: true });
+      return { success: true, message: 'ok', data: restaurant };
+    },
+
+    restaurantUpdateTimeSlot: async (_p, { id, openingTimes }, context) => {
+      requireVendorAuth(context);
+      return Restaurant.findByIdAndUpdate(id, { openingTimes }, { new: true });
+    },
+
+    muteRing: async (_p, { orderId }, context) => {
+      requireVendorAuth(context);
+      await Order.findByIdAndUpdate(orderId, { isRinged: true });
+      return true;
+    },
+
+    orderPickedUp: async (_p, { _id }, context) => {
+      const order = await Order.findByIdAndUpdate(
+        _id,
+        { orderStatus: 'PICKED', isPickedUp: true, pickedAt: new Date() },
+        { new: true }
+      );
+      const full = await populatedOrder(order._id);
+      pubsub.publish(EVENTS.ORDER_UPDATED(String(order._id)), { subscriptionOrder: full });
+      if (order.user) {
+        pubsub.publish(EVENTS.ORDER_STATUS_CHANGED_FOR_USER(String(order.user)), {
+          orderStatusChanged: { userId: order.user, origin: 'orderPickedUp', order: full },
+        });
+      }
+      return full;
+    },
+
+    createWithdrawRequest: async (_p, { amount, target }, context) => {
+      const doc = { target, requestAmount: amount, status: 'PENDING' };
+      if (target === 'rider') doc.rider = requireRiderAuth(context);
+      else doc.restaurant = requireVendorAuth(context);
+      const req = await WithdrawRequest.create(doc);
+      return { _id: req._id, requestAmount: req.requestAmount, status: req.status, createdAt: iso(req.createdAt) };
+    },
+
+    // ---- Gestion des produits (menu) ----
+    createCategory: async (_p, { restaurant, category }, context) => {
+      requireVendorAuth(context);
+      const doc = await Restaurant.findById(restaurant);
+      if (!doc) throw new Error('Restaurant introuvable');
+      doc.categories.push({ title: category.title, foods: [] });
+      await doc.save();
+      return doc;
+    },
+
+    editCategory: async (_p, { restaurant, categoryId, category }, context) => {
+      requireVendorAuth(context);
+      const doc = await Restaurant.findById(restaurant);
+      const cat = doc.categories.id(categoryId);
+      if (!cat) throw new Error('Catégorie introuvable');
+      cat.title = category.title;
+      await doc.save();
+      return doc;
+    },
+
+    deleteCategory: async (_p, { restaurant, categoryId }, context) => {
+      requireVendorAuth(context);
+      const doc = await Restaurant.findById(restaurant);
+      doc.categories.id(categoryId)?.deleteOne();
+      await doc.save();
+      return doc;
+    },
+
+    createFood: async (_p, { restaurant, categoryId, food }, context) => {
+      requireVendorAuth(context);
+      const doc = await Restaurant.findById(restaurant);
+      const cat = doc.categories.id(categoryId);
+      if (!cat) throw new Error('Catégorie introuvable');
+      cat.foods.push({
+        title: food.title,
+        description: food.description,
+        image: food.image,
+        subCategory: food.subCategory,
+        isActive: food.isActive ?? true,
+        isOutOfStock: food.isOutOfStock ?? false,
+        variations: (food.variations || []).map((v) => ({
+          title: v.title,
+          price: v.price,
+          discounted: v.discounted,
+          isOutOfStock: v.isOutOfStock ?? false,
+        })),
+      });
+      await doc.save();
+      return doc;
+    },
+
+    editFood: async (_p, { restaurant, categoryId, foodId, food }, context) => {
+      requireVendorAuth(context);
+      const doc = await Restaurant.findById(restaurant);
+      const cat = doc.categories.id(categoryId);
+      const item = cat?.foods.id(foodId);
+      if (!item) throw new Error('Produit introuvable');
+      item.title = food.title ?? item.title;
+      item.description = food.description ?? item.description;
+      item.image = food.image ?? item.image;
+      item.subCategory = food.subCategory ?? item.subCategory;
+      if (food.isActive !== undefined) item.isActive = food.isActive;
+      if (food.isOutOfStock !== undefined) item.isOutOfStock = food.isOutOfStock;
+      if (food.variations) {
+        item.variations = food.variations.map((v) => ({
+          _id: v._id || undefined,
+          title: v.title,
+          price: v.price,
+          discounted: v.discounted,
+          isOutOfStock: v.isOutOfStock ?? false,
+        }));
+      }
+      await doc.save();
+      return doc;
+    },
+
+    deleteFood: async (_p, { restaurant, categoryId, foodId }, context) => {
+      requireVendorAuth(context);
+      const doc = await Restaurant.findById(restaurant);
+      const cat = doc.categories.id(categoryId);
+      cat?.foods.id(foodId)?.deleteOne();
+      await doc.save();
+      return doc;
+    },
+
+    // ---- Livreur (Rider app) ----
+    riderLogin: async (_p, { username, password, notificationToken }) => {
+      const rider = await Rider.findOne({ username });
+      if (!rider) throw new Error('Identifiants invalides');
+      const valid = await comparePassword(password, rider.passwordHash);
+      if (!valid) throw new Error('Identifiants invalides');
+      if (notificationToken) {
+        rider.notificationToken = notificationToken;
+        await rider.save();
+      }
+      return { token: signRiderToken(rider._id), riderId: rider._id };
+    },
+
+    updateRiderLocation: async (_p, { latitude, longitude }, context) => {
+      const riderId = requireRiderAuth(context);
+      await Rider.findByIdAndUpdate(riderId, { location: { type: 'Point', coordinates: [longitude, latitude] } });
+      pubsub.publish(EVENTS.RIDER_LOCATION_UPDATED(String(riderId)), {
+        subscriptionRiderLocation: { latitude, longitude, accuracy: null, heading: null, speed: null, recordedAt: new Date().toISOString() },
+      });
+      return true;
+    },
+
+    toggleRiderAvailability: async (_p, _a, context) => {
+      const riderId = requireRiderAuth(context);
+      const rider = await Rider.findById(riderId);
+      rider.available = !rider.available;
+      await rider.save();
+      return rider;
+    },
+
+    deliverOrder: async (_p, { _id }, context) => {
+      const riderId = requireRiderAuth(context);
+      const order = await Order.findByIdAndUpdate(
+        _id,
+        { orderStatus: 'DELIVERED', status: 'DELIVERED', deliveredAt: new Date(), rider: riderId },
+        { new: true }
+      );
+      const full = await populatedOrder(order._id);
+      pubsub.publish(EVENTS.ORDER_UPDATED(String(order._id)), { subscriptionOrder: full });
+      if (order.user) {
+        pubsub.publish(EVENTS.ORDER_STATUS_CHANGED_FOR_USER(String(order.user)), {
+          orderStatusChanged: { userId: order.user, origin: 'deliverOrder', order: full },
+        });
+      }
+      return full;
     },
   },
 
