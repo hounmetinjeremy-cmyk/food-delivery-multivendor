@@ -77,6 +77,7 @@ const typeDefs = /* GraphQL */ `
 
   type Variation {
     _id: ID
+    id: ID
     title: String
     price: Float
     discounted: Float
@@ -86,6 +87,7 @@ const typeDefs = /* GraphQL */ `
 
   type Food {
     _id: ID
+    id: ID
     title: String
     description: String
     image: String
@@ -114,6 +116,7 @@ const typeDefs = /* GraphQL */ `
 
   type Addon {
     _id: ID
+    id: ID
     options: JSON
     title: String
     description: String
@@ -176,6 +179,109 @@ const typeDefs = /* GraphQL */ `
     distanceWithCurrentLocation: Float
     phone: String
     restaurantUrl: String
+    unique_restaurant_id: String
+    commissionRate: Float
+    hasBusinessDetails: Boolean
+    bussinessDetails: BussinessDetails
+    totalWalletAmount: Float
+    withdrawnWalletAmount: Float
+    currentWalletAmount: Float
+  }
+
+  type BussinessDetails {
+    bankName: String
+    accountNumber: String
+    accountName: String
+    accountCode: String
+  }
+
+  input BussinessDetailsInput {
+    bankName: String
+    accountNumber: String
+    accountName: String
+    accountCode: String
+  }
+
+  type RestaurantAuthPayload {
+    token: String
+    restaurantId: ID
+  }
+
+  type RiderAuthPayload {
+    token: String
+    riderId: ID
+  }
+
+  type UpdateResult {
+    success: Boolean
+    message: String
+    data: Restaurant
+  }
+
+  type WithdrawRequestType {
+    _id: ID
+    requestAmount: Float
+    status: String
+    createdAt: String
+  }
+
+  type StoreTotal {
+    storeTotal: Float
+  }
+  type StoreEarningsInner {
+    totalEarnings: Float
+  }
+  type StoreEarningsWrap {
+    storeEarnings: StoreEarningsInner
+  }
+  type StoreEarningsData {
+    grandTotalEarnings: StoreTotal
+    earnings: StoreEarningsWrap
+  }
+  type StoreEarningsResult {
+    data: StoreEarningsData
+  }
+
+  type TransactionEntry {
+    status: String
+    amountTransferred: Float
+    createdAt: String
+  }
+  type TransactionHistoryData {
+    data: [TransactionEntry]
+  }
+
+  input OpeningTimeInput {
+    startTime: String
+    endTime: String
+  }
+  input OpeningHourInput {
+    day: String
+    times: [OpeningTimeInput]
+  }
+
+  input VariationInput {
+    _id: ID
+    title: String!
+    price: Float!
+    discounted: Float
+    isOutOfStock: Boolean
+  }
+
+  input FoodInput {
+    _id: ID
+    title: String!
+    description: String
+    image: String
+    subCategory: String
+    isActive: Boolean
+    isOutOfStock: Boolean
+    variations: [VariationInput!]
+  }
+
+  input CategoryInput {
+    _id: ID
+    title: String!
   }
 
   type RestaurantCarouselPreview {
@@ -618,6 +724,13 @@ const typeDefs = /* GraphQL */ `
     subCategoriesByParentId(parentCategoryId: String!): [SubCategory]
     fetchAllShopTypes: ShopTypesResult
     nearByRestaurantsCuisines(latitude: Float!, longitude: Float!, shopType: String!): [Restaurant]
+    restaurantOrders(offset: Int, limit: Int): [Order]
+    earnings: StoreEarningsResult
+    transactionHistory: TransactionHistoryData
+    storeCurrentWithdrawRequest(storeId: String): WithdrawRequestType
+    riderOrders(offset: Int, limit: Int): [Order]
+    riderCurrentWithdrawRequest(riderId: String): WithdrawRequestType
+    riderEarnings: StoreEarningsResult
   }
 
   type Mutation {
@@ -671,6 +784,26 @@ const typeDefs = /* GraphQL */ `
     createSupportTicket(ticketInput: SupportTicketInput!): SupportTicket
     createMessage(messageInput: MessageInput!): TicketMessage
     verifyOtp(otp: String!, email: String, phone: String): Result
+
+    restaurantLogin(username: String!, password: String!, notificationToken: String): RestaurantAuthPayload
+    toggleStoreAvailability(restaurantId: String!): Restaurant
+    updateRestaurantBussinessDetails(id: String!, bussinessDetails: BussinessDetailsInput): UpdateResult
+    muteRing(orderId: String): Boolean
+    orderPickedUp(_id: String!): Order
+    restaurantUpdateTimeSlot(id: String!, openingTimes: [OpeningHourInput!]!): Restaurant
+    createWithdrawRequest(amount: Float!, target: String!): WithdrawRequestType
+
+    createCategory(restaurant: String!, category: CategoryInput!): Restaurant
+    editCategory(restaurant: String!, categoryId: String!, category: CategoryInput!): Restaurant
+    deleteCategory(restaurant: String!, categoryId: String!): Restaurant
+    createFood(restaurant: String!, categoryId: String!, food: FoodInput!): Restaurant
+    editFood(restaurant: String!, categoryId: String!, foodId: String!, food: FoodInput!): Restaurant
+    deleteFood(restaurant: String!, categoryId: String!, foodId: String!): Restaurant
+
+    riderLogin(username: String!, password: String!, notificationToken: String): RiderAuthPayload
+    updateRiderLocation(latitude: Float!, longitude: Float!): Boolean
+    toggleRiderAvailability: Rider
+    deliverOrder(_id: String!): Order
   }
 
   type UploadImageResult {
