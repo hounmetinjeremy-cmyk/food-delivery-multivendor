@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const { createYoga, createSchema } = require('graphql-yoga');
 const { typeDefs } = require('./schema');
 const { resolvers } = require('./resolvers');
-const { getUserIdFromRequest, verifyToken } = require('./auth');
+const { getAuthPayloadFromRequest, verifyToken } = require('./auth');
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -22,9 +22,7 @@ const schema = createSchema({ typeDefs, resolvers });
 const yoga = createYoga({
   schema,
   graphqlEndpoint: '/graphql',
-  context: async ({ request }) => ({
-    userId: getUserIdFromRequest(request),
-  }),
+  context: async ({ request }) => getAuthPayloadFromRequest(request),
   cors: {
     origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -45,7 +43,11 @@ useServer(
         (ctx.connectionParams && (ctx.connectionParams.authorization || ctx.connectionParams.Authorization)) || '';
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
       const payload = token ? verifyToken(token) : null;
-      return { userId: payload ? payload.userId : null };
+      return {
+        userId: payload?.userId || null,
+        restaurantId: payload?.restaurantId || null,
+        riderId: payload?.riderId || null,
+      };
     },
   },
   wsServer
